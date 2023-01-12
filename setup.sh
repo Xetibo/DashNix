@@ -1,5 +1,5 @@
 find $PWD -maxdepth 1 -mindepth 0 -exec ln -s '{}' $HOME/.config/ \;
-mv $HOME/.config/.zshrc ../.zshrc
+mv ../.zshrc $HOME/.config/.zshrc
 unlink $HOME/.config/.git 
 unlink $HOME/.config/.gitignore
 unlink $HOME/.config/README.md

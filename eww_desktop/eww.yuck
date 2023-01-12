@@ -306,7 +306,7 @@
 	  :monitor 0
           :geometry (geometry :x "0%"
                        :y "1px"
-                       :width "3417px"
+                       :width "99%"
                        :height "20px"
                        :anchor "top center")
           :stacking "bottom"
