@@ -19,7 +19,7 @@ save() {
 	echo "$pacvar" | awk '{ print $1 }' >"$pacfile"
 	echo "$flatvar" >"$flatfile"
 	mkdir -p $HOME/.local/bin/cargo/
-	ls $HOME/.local/bin/cargo/bin/ >"$carfile"
+	# ls $HOME/.local/bin/cargo/bin/ >"$carfile"
 }
 
 load() {
