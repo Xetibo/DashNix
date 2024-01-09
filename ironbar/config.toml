@@ -1,5 +1,6 @@
-[monitors.DP-1]
+[monitors.eDP-1]
 end = [
+  { type = "upower", class = "memory-usage" },
   { type = "sys_info", format = [
     " {memory_percent}",
   ], interval.memory = 30, class = "memory-usage" },

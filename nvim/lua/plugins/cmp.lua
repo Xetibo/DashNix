@@ -32,14 +32,12 @@ return {
       "FelipeLema/cmp-async-path",
       "saadparwaiz1/cmp_luasnip",
       "Saecki/crates.nvim",
-      { "roobert/tailwindcss-colorizer-cmp.nvim", config = true },
     },
     opts = function()
       vim.api.nvim_set_hl(0, "CmpGhostText", { link = "Comment", default = true })
       local cmp = require("cmp")
       local defaults = require("cmp.config.default")()
       local luasnip = require("luasnip")
-      local compare = require("cmp.config.compare")
       return {
         preselect = cmp.PreselectMode.None,
         completion = {
@@ -107,36 +105,37 @@ return {
           { name = "async_path", priority = 1, max_item_count = 2, keyword_length = 3, trigger_characters = {} },
           { name = "crates" },
         }),
-        sorting = {
-          priority_weight = 90,
-          comparators = {
-            compare.exact,
-            compare.score,
-            compare.offset,
-            compare.kind,
-          },
-        },
-        formatting = {
-          preselect = cmp.PreselectMode.None,
-          format = function(entry, item)
-            local icons = require("lazyvim.config").icons.kinds
-            if icons[item.kind] then
-              item.kind = icons[item.kind] .. item.kind
-            end
-            return require("tailwindcss-colorizer-cmp").formatter(entry, item)
-          end,
-        },
+        -- sorting = {
+        --   priority_weight = 90,
+        --   comparators = {
+        --     compare.exact,
+        --     compare.score,
+        --     compare.offset,
+        --     compare.kind,
+        --   },
+        -- },
+        -- formatting = {
+        --   preselect = cmp.PreselectMode.None,
+        --   format = function(entry, item)
+        --     local icons = require("lazyvim.config").icons.kinds
+        --     if icons[item.kind] then
+        --       item.kind = icons[item.kind] .. item.kind
+        --     end
+        --     return require("tailwindcss-colorizer-cmp").formatter(entry, item)
+        --   end,
+        -- },
         experimental = {
           ghost_text = {
             hl_group = "CmpGhostText",
           },
         },
+        sorting = defaults.sorting,
       }
     end,
-    config = function(_, opts)
-      local cmp = require("cmp")
-      require("luasnip.loaders.from_lua").load({ paths = "~/.config/nvim/snippets" })
-      cmp.setup(opts)
-    end,
+    -- config = function(_, opts)
+    --   local cmp = require("cmp")
+    --   require("luasnip.loaders.from_lua").load({ paths = "~/.config/nvim/snippets" })
+    --   cmp.setup(opts)
+    -- end,
   },
 }

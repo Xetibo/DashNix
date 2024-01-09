@@ -24,7 +24,7 @@ alias g+='bear -- g++ -Wextra -Werror -std=c++20'
 alias s="kitty +kitten ssh"
 alias zl='z "" '
 alias jo='joshuto'
-alias nv='neovide --novsync --nofork'
+alias nv='neovide --no-fork'
 alias cr='cargo run'
 alias grep='rg'
 alias cat='bat'

@@ -72,16 +72,13 @@ local codeSnippet = s(
   "code-",
   fmt(
     [[
-    //typstfmt::off
     ```{1}
     {2}
     ```
-    //typstfmt::on
-
     ]],
     {
-      i(1, "lang"),
-      i(2, "code"),
+      i(1, ""),
+      i(2, ""),
     }
   )
 )

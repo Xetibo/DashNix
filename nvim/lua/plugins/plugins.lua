@@ -30,13 +30,6 @@ return {
     },
   },
   {
-    "ThePrimeagen/harpoon",
-    lazy = true,
-    config = function()
-      require("telescope").load_extension("harpoon")
-    end,
-  },
-  {
     "iamcco/markdown-preview.nvim",
     lazy = true,
     event = "FileType markdown",
