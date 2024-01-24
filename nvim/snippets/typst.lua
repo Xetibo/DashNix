@@ -20,8 +20,8 @@ local file_pattern = "*.typst"
 local colorSnippet = s(
   "tx-",
   fmt([[ #text({1})[{2}] ]], {
-    i(1, "color"),
-    i(2, "text"),
+    i(1, ""),
+    i(2, ""),
   })
 )
 table.insert(snippets, colorSnippet)
@@ -47,7 +47,7 @@ local centerImageSnippet = s(
     #align(center, [#image("{1}", width: {2}%)])
     ]],
     {
-      i(1, "../../Screenshots"),
+      i(1, "../../Screenshots/"),
       i(2, "100"),
     }
   )
@@ -61,8 +61,8 @@ local colSnippet = s(
     #columns({1}, [{2}])
     ]],
     {
-      i(1, "col-amount"),
-      i(2, "content"),
+      i(1, ""),
+      i(2, ""),
     }
   )
 )
@@ -108,9 +108,9 @@ local patternSnippet = s(
     ])
     ]],
     {
-      i(1, "pattern"),
-      i(2, "problem"),
-      i(3, "context"),
+      i(1, ""),
+      i(2, ""),
+      i(3, ""),
       i(4, ""),
       i(5, ""),
       i(6, ""),

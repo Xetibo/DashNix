@@ -30,10 +30,8 @@ return {
     },
   },
   {
-    "iamcco/markdown-preview.nvim",
-    lazy = true,
-    event = "FileType markdown",
-    build = "cd app && yarn install",
+    "mrcjkb/rustaceanvim",
+    ft = { "rust" },
   },
   {
     "nvim-telescope/telescope-project.nvim",
