@@ -46,7 +46,7 @@
       };
       example = { };
       type = with lib.types; attrsOf anything;
-      description = "Firefox policy configuration";
+      description = "Firefox policy configuration. See https://mozilla.github.io/policy-templates/ for more information.";
     };
     extensions = lib.mkOption {
       default = with pkgs.nur.repos.rycee.firefox-addons; [

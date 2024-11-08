@@ -88,7 +88,7 @@
         ];
         type = with lib.types; listOf attrs;
         description = ''
-          Adds modules to ironbar.
+          Adds modules to ironbar. See https://github.com/JakeStanger/ironbar/wiki/ for more information.
         '';
       };
     };

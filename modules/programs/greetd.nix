@@ -64,7 +64,7 @@
         example = { };
         type = with lib.types; attrsOf anything;
         description = ''
-          Custom regret settings.
+          Custom regret settings. See https://github.com/rharish101/ReGreet/blob/main/regreet.sample.toml for more information.
         '';
       };
     };
@@ -101,9 +101,10 @@
             default_session = session;
           };
         };
-        programs.regreet.enable = true;
-        programs.regreet.settings = config.mods.regreet.customSettings;
-        
+
+        programs.regreet = {
+          settings = config.mods.regreet.customSettings;
+        };
 
         environment.etc."greetd/environments".text = config.mods.greetd.environments;
 
