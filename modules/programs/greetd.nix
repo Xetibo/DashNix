@@ -58,6 +58,16 @@
         '';
       };
     };
+    regreet = {
+      customSettings = lib.mkOption {
+        default = { };
+        example = { };
+        type = with lib.types; attrsOf anything;
+        description = ''
+          Custom regret settings.
+        '';
+      };
+    };
   };
 
   config =
@@ -91,6 +101,9 @@
             default_session = session;
           };
         };
+        programs.regreet.enable = true;
+        programs.regreet.settings = config.mods.regreet.customSettings;
+        
 
         environment.etc."greetd/environments".text = config.mods.greetd.environments;
 
