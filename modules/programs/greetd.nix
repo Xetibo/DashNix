@@ -102,10 +102,6 @@
           };
         };
 
-        programs.regreet = {
-          settings = lib.mkForce config.mods.regreet.customSettings;
-        };
-
         environment.etc."greetd/environments".text = config.mods.greetd.environments;
 
         # should technically be the same, but this is configured instead in order to provide a decent out of the box login experience.
@@ -134,11 +130,13 @@
           env=XCURSOR_SIZE,${toString config.mods.stylix.cursor.size}
           env=QT_QPA_PLATFORMTHEME,qt5ct
 
-          exec-once=regreet --style /home/${username}/.config/gtk-3.0/gtk.css; hyprctl dispatch exit
+          exec-once=regreet --style /home/${username}/.config/gtk-3.0/gtk.css --config /home/${username}/.config/regreet/regreet.toml; hyprctl dispatch exit
         '';
 
         # unlock GPG keyring on login
         security.pam.services.greetd.enableGnomeKeyring = true;
+      } // lib.optionalAttrs (options ? home) {
+        xdg.configFile."regreet/regreet.toml".source = (pkgs.formats.toml { }).generate "regreet" config.mods.regreet.customSettings;
       }
     );
 }
