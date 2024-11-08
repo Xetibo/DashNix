@@ -106,6 +106,7 @@
           flake-checker
           gnome-keyring
           gnutar
+          greetd.regreet
           killall
           kitty
           libnotify

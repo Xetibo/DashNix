@@ -103,7 +103,6 @@
         };
 
         programs.regreet = {
-          enable = true;
           settings = lib.mkForce config.mods.regreet.customSettings;
         };
 
