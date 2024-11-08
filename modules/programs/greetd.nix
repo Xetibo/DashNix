@@ -103,6 +103,7 @@
         };
 
         programs.regreet = {
+          enable = true;
           settings = config.mods.regreet.customSettings;
         };
 
