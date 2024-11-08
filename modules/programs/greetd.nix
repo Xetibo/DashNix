@@ -104,7 +104,7 @@
 
         programs.regreet = {
           enable = true;
-          settings = config.mods.regreet.customSettings;
+          settings = lib.mkForce config.mods.regreet.customSettings;
         };
 
         environment.etc."greetd/environments".text = config.mods.greetd.environments;
