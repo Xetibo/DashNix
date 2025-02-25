@@ -439,7 +439,7 @@
         programs.vscode = lib.mkIf config.mods.coding.vscodium.enable {
           enable = true;
           package = pkgs.vscodium;
-          extensions = config.mods.coding.vscodium.extensions;
+          profiles.default.extensions = config.mods.coding.vscodium.extensions;
         };
         xdg.configFile."neovide/config.toml" = lib.mkIf config.mods.coding.dashvim {
           source = (pkgs.formats.toml {}).generate "neovide" {

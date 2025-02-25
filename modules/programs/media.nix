@@ -62,7 +62,7 @@
             polylux2pdfpc
             # spotify
             # video editing
-            kdenlive
+            kdePackages.kdenlive
             # image creation
             inkscape
             gimp

@@ -2,6 +2,7 @@
   lib,
   config,
   options,
+  pkgs,
   ...
 }: {
   options.mods.browser.firefox = {
@@ -69,6 +70,7 @@
           value = {
             isDefault = true;
             id = 0;
+            extensions.packages = [ pkgs.nur.repos.rycee.firefox-addons.darkreader ];
           };
         }
       ];
