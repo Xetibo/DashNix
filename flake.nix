@@ -4,6 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOs/nixpkgs/nixos-unstable";
     stable.url = "github:NixOs/nixpkgs/nixos-24.11";
+    nur.url = "github:nix-community/NUR";
 
     nix-flatpak = {
       url = "github:gmodena/nix-flatpak";
@@ -77,7 +78,9 @@
         allowUnfree = true;
         permittedInsecurePackages = permittedPackages;
       };
-      overlays = [inputs.chaoticNyx.overlays.default];
+      overlays = [
+        inputs.nur.overlays.default
+        inputs.chaoticNyx.overlays.default];
     };
     pkgs = import inputs.nixpkgs {
       system = currentSystem;
@@ -88,7 +91,10 @@
         allowBroken = true;
         allowUnfree = true;
       };
-      overlays = [inputs.chaoticNyx.overlays.default];
+      overlays = [
+        inputs.nur.overlays.default
+        inputs.chaoticNyx.overlays.default
+        ];
     };
   in rec {
     dashNixLib = import ./lib {
