@@ -33,6 +33,7 @@
 
     stylix.url = "github:danth/stylix";
     base16.url = "github:SenchoPens/base16.nix";
+    disko.url = "github:nix-community/disko/latest";
 
     anyrun.url = "github:Kirottu/anyrun";
     oxicalc.url = "github:DashieTM/OxiCalc";
@@ -80,7 +81,8 @@
       };
       overlays = [
         inputs.nur.overlays.default
-        inputs.chaoticNyx.overlays.default];
+        inputs.chaoticNyx.overlays.default
+      ];
     };
     pkgs = import inputs.nixpkgs {
       system = currentSystem;
@@ -94,7 +96,7 @@
       overlays = [
         inputs.nur.overlays.default
         inputs.chaoticNyx.overlays.default
-        ];
+      ];
     };
   in rec {
     dashNixLib = import ./lib {

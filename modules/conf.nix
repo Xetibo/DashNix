@@ -28,6 +28,14 @@
       '';
     };
 
+    defualtDiskId = lib.mkOption {
+      default = "TODO";
+      example = "/dev/disk/by-id/nvme-Force_MP510_19498249000129196385";
+      description = ''
+        The id of the disk to format
+      '';
+    };
+
     cpu = lib.mkOption {
       # TODO: how to enable arm?
       default = "amd";

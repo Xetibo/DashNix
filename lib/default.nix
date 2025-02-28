@@ -44,6 +44,7 @@
       nixos = [
         inputs.home-manager.nixosModules.home-manager
         inputs.stylix.nixosModules.stylix
+        inputs.disko.nixosModules.disko
         ../base
         ../home
         ../modules
