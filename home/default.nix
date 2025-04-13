@@ -30,6 +30,7 @@
     };
 
     users.${config.conf.username} = {
+      disabledModules = ["programs/anyrun.nix"];
       imports =
         [
           ./common.nix

@@ -58,8 +58,8 @@
   };
 
   config = lib.mkIf config.mods.hyprland.anyrun.enable (
-    lib.optionalAttrs (options ? programs.anyrun) {
-      programs.anyrun = {
+    lib.optionalAttrs (options ? home.packages) {
+      programs.anyrun = lib.mkForce {
         enable = true;
         config =
           if config.mods.hyprland.anyrun.useDefaultConfig
@@ -71,7 +71,6 @@
                 inputs.anyrun.packages.${pkgs.system}.translate
                 inputs.anyrun.packages.${pkgs.system}.websearch
               ];
-              #position = "center";
               hideIcons = false;
               width = {
                 fraction = 0.3;
@@ -92,7 +91,7 @@
             ''
               #window {
                 border-radius: 10px;
-                background-color: none;
+                background-color: transparent;
               }
 
               box#main {
@@ -113,7 +112,7 @@
               }
 
               entry#entry {
-                border: none;
+                border: 0;
                 border-radius: 10px;
                 margin: 10px 10px 0px 10px;
               }
