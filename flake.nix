@@ -36,12 +36,12 @@
     disko.url = "github:nix-community/disko/latest";
 
     anyrun.url = "github:Kirottu/anyrun";
-    oxicalc.url = "github:DashieTM/OxiCalc";
-    oxishut.url = "github:DashieTM/OxiShut";
-    oxinoti.url = "github:DashieTM/OxiNoti";
-    oxidash.url = "github:DashieTM/OxiDash";
-    oxipaste.url = "github:DashieTM/OxiPaste";
-    hyprdock.url = "github:DashieTM/hyprdock";
+    oxicalc.url = "github:Xetibo/OxiCalc";
+    oxishut.url = "github:Xetibo/OxiShut";
+    oxinoti.url = "github:Xetibo/OxiNoti";
+    oxidash.url = "github:Xetibo/OxiDash";
+    oxipaste.url = "github:Xetibo/OxiPaste";
+    hyprdock.url = "github:Xetibo/hyprdock";
     reset.url = "github:Xetibo/ReSet";
     reset-plugins.url = "github:Xetibo/ReSet-Plugins";
 
@@ -49,7 +49,7 @@
     chaoticNyx.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
 
     dashvim = {
-      url = "github:DashieTM/DashVim";
+      url = "github:Xetibo/DashVim";
     };
   };
 

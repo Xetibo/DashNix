@@ -5,7 +5,7 @@
     nixpkgs.url = "github:NixOs/nixpkgs/nixos-unstable";
     stable.url = "github:NixOs/nixpkgs/nixos-24.05";
     dashNix = {
-      url = "github:DashieTM/DashNix";
+      url = "github:Xetibo/DashNix";
       inputs = {
         nixpkgs.follows = "nixpkgs";
         stable.follows = "stable";

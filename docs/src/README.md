@@ -14,7 +14,7 @@ This flake is intended to be used as an input to your own NixOS configuration:
 
 ```nix
 dashNix = {
-  url = "github:DashieTM/DashNix";
+  url = "github:Xetibo/DashNix";
   inputs = {
     # ensure these are here to update the packages on your own
     nixpkgs.follows = "nixpkgs";
