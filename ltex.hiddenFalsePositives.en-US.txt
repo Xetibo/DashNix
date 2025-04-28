@@ -1,1 +1,0 @@
-{"rule":"MORFOLOGIK_RULE_EN_US","sentence":"^\\QYou can find a custom ISO on my NextCloud server: Link.\\E$"}

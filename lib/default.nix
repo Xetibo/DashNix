@@ -58,6 +58,7 @@
         inputs.oxinoti.homeManagerModules.default
         inputs.oxidash.homeManagerModules.default
         inputs.oxipaste.homeManagerModules.default
+        inputs.oxirun.homeManagerModules.default
         inputs.hyprdock.homeManagerModules.default
         inputs.hyprland.homeManagerModules.default
         inputs.reset.homeManagerModules.default
