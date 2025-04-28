@@ -147,7 +147,7 @@ in {
                 "$mod SUPER,E,exec,nautilus -w"
                 "$mod SUPER,N,exec,neovide"
                 "$mod SUPER,M,exec,oxidash"
-                "$mod SUPER,R,exec,anyrun"
+                "$mod SUPER,R,exec,oxirun"
                 "$mod SUPER,G,exec,oxicalc"
                 "$mod SUPER,D,exec,oxishut"
                 "$mod SUPER,A,exec,oxipaste-iced"
