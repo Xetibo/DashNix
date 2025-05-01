@@ -13,13 +13,13 @@ in {
     #(modulesPath + "/misc/nixpkgs/read-only.nix")
   ];
 
+  wsl.enable = config.conf.wsl;
+
   # Bootloader.
-  boot = {
+  boot = lib.mkIf (!config.conf.wsl) {
     consoleLogLevel = 0;
 
-    boot.loader.systemd-boot.enable = lib.mkForce false;
-
-    boot.lanzaboote = lib.mkIf config.conf.secureBoot {
+    lanzaboote = lib.mkIf config.conf.secureBoot {
       enable = true;
       pkiBundle = "/var/lib/sbctl";
     };
@@ -29,7 +29,7 @@ in {
         enable =
           if config.conf.secureBoot
           then lib.mkForce false
-          else if config.conf.useSystemdBootloadertrue
+          else if config.conf.useSystemdBootloader
           then true
           else false;
         configurationLimit = 5;
@@ -74,7 +74,6 @@ in {
   # Enable the X11 windowing system.
   services = {
     lorri.enable = true;
-    flatpak.enable = true;
     xserver.enable = true;
     fstrim.enable = lib.mkDefault true;
     # Enable sound with pipewire.

@@ -4,10 +4,11 @@
   inputs = {
     unstable.url = "github:NixOs/nixpkgs/nixos-unstable";
     stable.url = "github:NixOs/nixpkgs/nixos-24.11";
+    nixos-wsl.url = "github:nix-community/NixOS-WSL/main";
     nur.url = "github:nix-community/NUR";
-
-    nix-flatpak = {
-      url = "github:gmodena/nix-flatpak";
+    lanzaboote = {
+      url = "github:nix-community/lanzaboote/v0.4.2";
+      inputs.nixpkgs.follows = "unstable";
     };
 
     home-manager = {

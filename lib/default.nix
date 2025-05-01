@@ -43,6 +43,8 @@
     },
     mods ? {
       nixos = [
+        inputs.lanzaboote.nixosModules.lanzaboote
+        inputs.nixos-wsl.nixosModules.default
         inputs.home-manager.nixosModules.home-manager
         inputs.stylix.nixosModules.stylix
         inputs.disko.nixosModules.disko
@@ -62,7 +64,6 @@
         inputs.hyprdock.homeManagerModules.default
         inputs.hyprland.homeManagerModules.default
         inputs.reset.homeManagerModules.default
-        inputs.nix-flatpak.homeManagerModules.nix-flatpak
         inputs.sops-nix.homeManagerModules.sops
         inputs.dashvim.homeManagerModules.dashvim
         ../modules

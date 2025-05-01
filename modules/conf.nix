@@ -20,6 +20,14 @@
       '';
     };
 
+    wsl = lib.mkOption {
+      default = false;
+      example = true;
+      description = ''
+        Runs Nix in wsl
+      '';
+    };
+
     secureBoot = lib.mkOption {
       default = false;
       example = true;

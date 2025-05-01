@@ -237,7 +237,6 @@ For package lists, please check the individual modules, as the lists can be long
 - drives : A drive configuration module
 - firefox: Enables and configures firefox (extensions and settings)
 - fish: Enables and configures fish shell
-- flatpak : Installs and enables declarative flatpak
 - gaming : Configures gaming related features (launchers, gamemode)
 - git : Git key and config module
 - gnome_services : Gnome services for minimal enviroments -> Window managers etc

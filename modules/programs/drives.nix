@@ -149,7 +149,7 @@
 
   config = (
     lib.optionalAttrs (options ? fileSystems) {
-      fileSystems = lib.mkIf (config.mods.drives.variant == "manual") (
+      fileSystems = lib.mkIf (config.mods.drives.variant == "manual" && !config.conf.wsl) (
         builtins.listToAttrs (
           map (
             {
@@ -196,7 +196,7 @@
         }
       );
 
-      swapDevices = lib.mkIf (config.mods.drives.useSwap && config.mods.drives.variant == "manual") [
+      swapDevices = lib.mkIf (config.mods.drives.useSwap && config.mods.drives.variant == "manual" && !config.conf.wsl) [
         {device = "/dev/disk/by-label/SWAP";}
       ];
 
