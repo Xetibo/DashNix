@@ -74,6 +74,7 @@
             seahorse
             upower
             xorg.xkbutils
+            sbctl
           ]
           ++ config.mods.basePackages.additionalPackages
       else config.mods.basePackages.additionalPackages;

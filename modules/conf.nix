@@ -20,6 +20,15 @@
       '';
     };
 
+    secureBoot = lib.mkOption {
+      default = false;
+      example = true;
+      description = ''
+        enables secure boot.
+        Please don't forget to add your keys.
+      '';
+    };
+
     useSystemdBootloader = lib.mkOption {
       default = true;
       example = false;

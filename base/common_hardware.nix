@@ -16,13 +16,27 @@ in {
   # Bootloader.
   boot = {
     consoleLogLevel = 0;
+
+    boot.loader.systemd-boot.enable = lib.mkForce false;
+
+    boot.lanzaboote = lib.mkIf config.conf.secureBoot {
+      enable = true;
+      pkiBundle = "/var/lib/sbctl";
+    };
+
     loader = {
-      systemd-boot = lib.mkIf config.conf.useSystemdBootloader {
-        enable = true;
+      systemd-boot = {
+        enable =
+          if config.conf.secureBoot
+          then lib.mkForce false
+          else if config.conf.useSystemdBootloadertrue
+          then true
+          else false;
         configurationLimit = 5;
       };
       efi.canTouchEfiVariables = true;
     };
+
     kernelPackages = lib.mkDefault pkgs.linuxPackages_latest;
     initrd = {
       verbose = false;
