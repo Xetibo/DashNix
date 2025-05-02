@@ -5,7 +5,7 @@
 
 </div>
 
-An opinionated flake to bootstrap NixOS systems with default configurations for various programs and services from both NixOS and HomeManger which can be enabled, disabled, configured or replaced at will.
+An opinionated flake to bootstrap NixOS systems with default configurations for various programs and services from both NixOS and HomeManager which can be enabled, disabled, configured or replaced at will.
 
 
 # Usage
@@ -116,7 +116,7 @@ Here is a minimal required configuration.nix (the TODOs mention a required chang
     #   ];
     # or amd, whatever you have
     gpu.nvidia.enable = true;
-    kde_connect.enable = true;
+    kdeConnect.enable = true;
     # login manager:
     # default is greetd
     # greetd = { };

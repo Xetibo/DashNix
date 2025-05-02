@@ -25,6 +25,18 @@
         Use swap in drive.
       '';
     };
+    useEncryption = lib.mkOption {
+      default = false;
+      example = true;
+      type = lib.types.bool;
+      description = ''
+        Enables encryption.
+        !WARNING!
+        You need your root drive to be named root exactly!
+        Otherwise there will not be a root crypt!
+        !WARNING!
+      '';
+    };
     homeAndRootFsTypes = lib.mkOption {
       default = "ext4";
       example = "btrfs";
@@ -149,6 +161,21 @@
 
   config = (
     lib.optionalAttrs (options ? fileSystems) {
+      boot.initrd.luks.devices = lib.mkIf (config.mods.drives.variant == "manual" && config.mods.drives.useEncryption) (
+        builtins.listToAttrs (
+          map (
+            {
+              name,
+              drive,
+            }: {
+              cryptstorage.device = lib.mkIf (name != "root") drive?device;
+              cryptoroot.device = lib.mkIf (name == "root") drive?device;
+            }
+          )
+          config.mods.drives.extraDrives
+        )
+      );
+
       fileSystems = lib.mkIf (config.mods.drives.variant == "manual" && !config.conf.wsl) (
         builtins.listToAttrs (
           map (

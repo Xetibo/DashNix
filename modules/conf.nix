@@ -33,7 +33,16 @@
       example = true;
       description = ''
         enables secure boot.
-        Please don't forget to add your keys.
+        Note: Secure boot is NOT reproducible
+        Here are the necessary steps:
+        + create your keys with sbctl -> sudo sbctl create-keys
+        + build with systemd once -> set this to false and build once
+        + build with secureBoot true
+        + verify that your keys are signed (note, only systemd and your generations should now be signed): sudo sbtcl verify
+        + enroll your keys (microsoft is necessary for windows dualboot support, leave it there): sudo sbctl enroll-keys --microsoft
+        + reboot with secureboot enabled
+        Note: Some motherboards have vendor specific keys for secure boot, this may not necessarily work with our self signed keys
+        You likely have to disable these vendor specific keys (example HP: sure boot)
       '';
     };
 

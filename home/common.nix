@@ -25,11 +25,6 @@ in {
     };
 
     keyboard = null;
-
-    #file.".local/share/flatpak/overrides/global".text = lib.mkForce ''
-    #  [Context]
-    #  filesystems=xdg-config/gtk-3.0;xdg-config/gtk-4.0
-    #'';
   };
 
   programs.nix-index = {
