@@ -10,8 +10,8 @@
     hyprland = {
       anyrun = {
         enable = lib.mkOption {
-          default = true;
-          example = false;
+          default = false;
+          example = true;
           type = lib.types.bool;
           description = "Enables anyrun";
         };

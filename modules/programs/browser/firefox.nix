@@ -80,6 +80,12 @@
   };
   config = lib.mkIf (config.mods.browser.firefox.enable || config.mods.homePackages.browser == "firefox") (
     lib.optionalAttrs (options ? programs.firefox.profiles) {
+      stylix.targets.firefox.profileNames =
+        map (
+          {name, ...}:
+            name
+        )
+        config.mods.browser.firefox.profiles;
       programs.firefox = {
         enable = true;
         policies = config.mods.browser.firefox.configuration;

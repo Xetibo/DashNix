@@ -124,8 +124,8 @@ in {
         settings =
           if config.mods.hyprland.useDefaultConfig
           then
-            (
-              lib.recursiveUpdate
+            lib.mkMerge
+            [
               {
                 "$mod" = "SUPER";
 
@@ -148,12 +148,13 @@ in {
                   "$mod SUPER,T,exec,kitty -1"
                   "$mod SUPER,E,exec,nautilus -w"
                   "$mod SUPER,N,exec,neovide"
-                  "$mod SUPER,M,exec,oxidash"
-                  "$mod SUPER,R,exec,anyrun"
-                  "$mod SUPER,G,exec,oxicalc"
-                  "$mod SUPER,D,exec,oxishut"
-                  "$mod SUPER,A,exec,oxipaste-iced"
-                  "$mod SUPERSHIFT,P,exec,hyprdock --gui"
+                  (lib.mkIf (config.mods.hyprland.anyrun.enable) "$mod SUPER,R,exec,anyrun")
+                  (lib.mkIf (config.mods.oxi.oxirun.enable) "$mod SUPER,R,exec,oxirun")
+                  (lib.mkIf (config.mods.oxi.oxidash.enable) "$mod SUPER,M,exec,oxidash")
+                  (lib.mkIf (config.mods.oxi.oxicalc.enable) "$mod SUPER,G,exec,oxicalc")
+                  (lib.mkIf (config.mods.oxi.oxishut.enable) "$mod SUPER,D,exec,oxishut")
+                  (lib.mkIf (config.mods.oxi.oxipaste.enable) "$mod SUPER,A,exec,oxipaste-iced")
+                  (lib.mkIf (config.mods.oxi.hyprdock.enable) "$mod SUPERSHIFT,P,exec,hyprdock --gui")
                   "$mod SUPERSHIFT,L,exec, playerctl -a pause & hyprlock & systemctl suspend"
                   "$mod SUPERSHIFT,K,exec, playerctl -a pause & hyprlock & systemctl hibernate"
 
@@ -375,18 +376,20 @@ in {
                   ++ config.mods.hyprland.extraAutostart;
 
                 plugin =
-                  lib.recursiveUpdate
-                  {
-                    hyprspace = lib.mkIf config.mods.hyprland.hyprspaceEnable {
-                      bind = [
-                        "SUPER, W, overview:toggle, toggle"
-                      ];
-                    };
-                  }
-                  config.mods.hyprland.pluginConfig;
+                  lib.mkMerge
+                  [
+                    {
+                      hyprspace = lib.mkIf config.mods.hyprland.hyprspaceEnable {
+                        bind = [
+                          "SUPER, W, overview:toggle, toggle"
+                        ];
+                      };
+                    }
+                    config.mods.hyprland.pluginConfig
+                  ];
               }
               config.mods.hyprland.customConfig
-            )
+            ]
           else lib.mkForce config.mods.hyprland.customConfig;
         plugins =
           [

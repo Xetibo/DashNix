@@ -87,7 +87,7 @@
           (lib.mkIf config.mods.gpu.vapi.enable pkgs.libvdpau-va-gl)
           (lib.mkIf config.mods.gpu.vapi.enable pkgs.libva)
           (lib.mkIf config.mods.gpu.vapi.enable pkgs.vaapiVdpau)
-          (lib.mkIf (config.mods.gpu.intelgpu.enable || config.mods.gpu.amdgpu.enable) pkgs.mesa.drivers)
+          (lib.mkIf (config.mods.gpu.intelgpu.enable || config.mods.gpu.amdgpu.enable) pkgs.mesa)
         ];
         rocmPackages = [
           pkgs.rocmPackages.clr.icd
