@@ -7,6 +7,7 @@
     ./coding.nix
     ./containers.nix
     ./drives.nix
+    ./fastfetch.nix
     ./fish.nix
     ./flatpak.nix
     ./gaming.nix
