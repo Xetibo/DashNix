@@ -22,6 +22,7 @@ in {
     lanzaboote = lib.mkIf config.conf.secureBoot {
       enable = true;
       pkiBundle = "/var/lib/sbctl";
+      settings.reboot-for-bitlocker = true;
     };
 
     loader = {
