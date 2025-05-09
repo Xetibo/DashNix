@@ -47,6 +47,12 @@
           description = "Extensions to be installed";
         };
       };
+      penpot = lib.mkOption {
+        default = false;
+        example = true;
+        type = lib.types.bool;
+        description = "Enables penpot";
+      };
       useDefaultPackages = lib.mkOption {
         default = true;
         example = false;
@@ -469,6 +475,7 @@
           [
             (lib.mkIf config.mods.coding.dashvim neovide)
             (lib.mkIf config.mods.coding.jetbrains jetbrains-toolbox)
+            (lib.mkIf config.mods.coding.penpot pkgs.penpot-desktop)
           ]
           ++ config.mods.coding.additionalPackages
           ++ (lib.lists.optionals config.mods.coding.useDefaultPackages basePackages)
