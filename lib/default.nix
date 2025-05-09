@@ -66,6 +66,7 @@
         inputs.reset.homeManagerModules.default
         inputs.sops-nix.homeManagerModules.sops
         inputs.dashvim.homeManagerModules.dashvim
+        inputs.fancontrol.homeManagerModules.default
         ../modules
       ];
     },

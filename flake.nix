@@ -32,6 +32,9 @@
 
     zen-browser.url = "github:youwen5/zen-browser-flake";
 
+    # TODO move to upstream repository after merged nix flake pr
+    fancontrol.url = "git+https://github.com/DashieTM/fancontrol-gui?ref=nix-flake";
+
     stylix.url = "github:danth/stylix";
     base16.url = "github:SenchoPens/base16.nix";
     disko.url = "github:nix-community/disko/latest";
