@@ -34,8 +34,8 @@ in {
   };
 
   nix = {
-    extraOptions = lib.mkIf (config ? sops.secrets && config.sops.secrets ? access.path) ''
+    extraOptions = lib.mkDefault (lib.mkIf (config ? sops.secrets && config.sops.secrets ? access.path) ''
       !include ${config.sops.secrets.access.path}
-    '';
+    '');
   };
 }

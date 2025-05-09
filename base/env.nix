@@ -2,6 +2,7 @@
   mkDashDefault,
   pkgs,
   config,
+  lib,
   ...
 }: {
   environment = {

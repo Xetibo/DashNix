@@ -50,13 +50,14 @@ in {
         "sd_mod"
       ];
     };
-    kernelParams =
+    kernelParams = lib.mkDefault (
       [
         ''resume="PARTLABEL=SWAP"''
         ''quiet''
         ''udev.log_level=3''
       ]
-      ++ config.conf.bootParams;
+      ++ config.conf.bootParams
+    );
   };
 
   networking = {
@@ -101,7 +102,7 @@ in {
 
       builders-use-substitutes = mkDashDefault true;
 
-      substituters = [
+      substituters = lib.mkDefault [
         "https://hyprland.cachix.org"
         "https://anyrun.cachix.org"
         "https://cache.garnix.io"
@@ -115,7 +116,7 @@ in {
         "https://chaotic-nyx.cachix.org/"
       ];
 
-      trusted-public-keys = [
+      trusted-public-keys = lib.mkDefault [
         "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
         "anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s="
         "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
@@ -162,10 +163,11 @@ in {
         "video"
         "audio"
       ];
-      packages = with pkgs; [
-        home-manager
-        xdg-desktop-portal-gtk
-      ];
+      packages = with pkgs;
+        lib.mkDefault [
+          home-manager
+          xdg-desktop-portal-gtk
+        ];
       # this password will only last for the first login
       # e.g. login, then change to whatever else, this also ensures no public hash is available
       password = mkDashDefault "firstlogin";
