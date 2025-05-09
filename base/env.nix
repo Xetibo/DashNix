@@ -1,22 +1,23 @@
 {
+  mkDashDefault,
   pkgs,
   config,
   ...
 }: {
   environment = {
     variables = {
-      GSETTINGS_SCHEMA_DIR = "${pkgs.glib.getSchemaPath pkgs.gsettings-desktop-schemas}";
-      NEOVIDE_MAXIMIZED = "0";
-      GPG_TTY = "$(tty)";
-      EDITOR = "neovide --no-fork";
-      SUDO_EDITOR = "neovide --no-fork";
-      SCRIPTS = "$HOME/.config/scripts";
+      GSETTINGS_SCHEMA_DIR = mkDashDefault "${pkgs.glib.getSchemaPath pkgs.gsettings-desktop-schemas}";
+      NEOVIDE_MAXIMIZED = mkDashDefault "0";
+      GPG_TTY = mkDashDefault "$(tty)";
+      EDITOR = mkDashDefault "neovide --no-fork";
+      SUDO_EDITOR = mkDashDefault "neovide --no-fork";
+      SCRIPTS = mkDashDefault "$HOME/.config/scripts";
     };
     sessionVariables = {
-      NIXOS_OZONE_WL = "1";
-      GOPATH = "$HOME/.go";
-      FLAKE = config.conf.nixosConfigPath;
-      NH_FLAKE = config.conf.nixosConfigPath;
+      NIXOS_OZONE_WL = mkDashDefault "1";
+      GOPATH = mkDashDefault "$HOME/.go";
+      FLAKE = mkDashDefault config.conf.nixosConfigPath;
+      NH_FLAKE = mkDashDefault config.conf.nixosConfigPath;
     };
   };
 }

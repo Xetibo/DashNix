@@ -1,4 +1,5 @@
 {
+  mkDashDefault,
   lib,
   config,
   options,
@@ -100,7 +101,7 @@
         ];
       in {
         enable = true;
-        enable32Bit = lib.mkDefault true;
+        enable32Bit = mkDashDefault true;
         extraPackages =
           amdPackages
           ++ (lib.lists.optionals (config.mods.gpu.vapi.rocm.enable && config.mods.gpu.amdgpu.enable) rocmPackages);

@@ -1,4 +1,5 @@
 {
+  mkDashDefault,
   pkgs,
   config,
   lib,
@@ -10,19 +11,18 @@
 in {
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
-    #(modulesPath + "/misc/nixpkgs/read-only.nix")
   ];
 
-  wsl.enable = config.conf.wsl;
+  wsl.enable = mkDashDefault config.conf.wsl;
 
   # Bootloader.
   boot = lib.mkIf (!config.conf.wsl) {
-    consoleLogLevel = 0;
+    consoleLogLevel = mkDashDefault 0;
 
     lanzaboote = lib.mkIf config.conf.secureBoot {
-      enable = true;
-      pkiBundle = "/var/lib/sbctl";
-      settings.reboot-for-bitlocker = true;
+      enable = mkDashDefault true;
+      pkiBundle = mkDashDefault "/var/lib/sbctl";
+      settings.reboot-for-bitlocker = mkDashDefault true;
     };
 
     loader = {
@@ -32,15 +32,15 @@ in {
           then lib.mkForce false
           else if config.conf.useSystemdBootloader
           then true
-          else false;
+          else mkDashDefault false;
         configurationLimit = 5;
       };
-      efi.canTouchEfiVariables = true;
+      efi.canTouchEfiVariables = mkDashDefault true;
     };
 
-    kernelPackages = lib.mkDefault pkgs.linuxPackages_latest;
+    kernelPackages = mkDashDefault pkgs.linuxPackages_latest;
     initrd = {
-      verbose = false;
+      verbose = mkDashDefault false;
       availableKernelModules = [
         "nvme"
         "xhci_pci"
@@ -60,46 +60,46 @@ in {
   };
 
   networking = {
-    useDHCP = lib.mkDefault true;
-    networkmanager.enable = true;
-    hostName = hostName;
+    useDHCP = mkDashDefault true;
+    networkmanager.enable = mkDashDefault true;
+    hostName = mkDashDefault hostName;
   };
 
   time = {
-    timeZone = config.conf.timezone;
-    hardwareClockInLocalTime = config.conf.systemLocalTime;
+    timeZone = mkDashDefault config.conf.timezone;
+    hardwareClockInLocalTime = mkDashDefault config.conf.systemLocalTime;
   };
 
-  i18n.defaultLocale = config.conf.locale;
+  i18n.defaultLocale = mkDashDefault config.conf.locale;
 
   services = {
-    lorri.enable = true;
-    xserver.enable = true;
-    fstrim.enable = lib.mkDefault true;
-    pulseaudio.enable = false;
+    lorri.enable = mkDashDefault true;
+    xserver.enable = mkDashDefault true;
+    fstrim.enable = mkDashDefault true;
+    pulseaudio.enable = mkDashDefault false;
     pipewire = {
-      enable = true;
+      enable = mkDashDefault true;
       alsa = {
-        enable = true;
-        support32Bit = true;
+        enable = mkDashDefault true;
+        support32Bit = mkDashDefault true;
       };
-      jack.enable = true;
-      pulse.enable = true;
+      jack.enable = mkDashDefault true;
+      pulse.enable = mkDashDefault true;
     };
   };
 
-  nixpkgs.hostPlatform = lib.mkDefault config.conf.system;
+  nixpkgs.hostPlatform = mkDashDefault config.conf.system;
   nix = {
     gc = {
-      automatic = true;
-      dates = "weekly";
-      options = "--delete-older-than 7d --delete-generations +5";
+      automatic = mkDashDefault true;
+      dates = mkDashDefault "weekly";
+      options = mkDashDefault "--delete-older-than 7d --delete-generations +5";
     };
     settings = {
       trusted-users = [username];
-      auto-optimise-store = true;
+      auto-optimise-store = mkDashDefault true;
 
-      builders-use-substitutes = true;
+      builders-use-substitutes = mkDashDefault true;
 
       substituters = [
         "https://hyprland.cachix.org"
@@ -129,29 +129,30 @@ in {
         "chaotic-nyx.cachix.org-1:HfnXSw4pj95iI/n17rIDy40agHj12WfF+Gqk6SonIT8="
       ];
 
-      experimental-features = "nix-command flakes pipe-operators";
+      experimental-features = mkDashDefault "nix-command flakes pipe-operators";
     };
   };
 
   hardware = {
     cpu.${config.conf.cpu}.updateMicrocode =
-      lib.mkDefault config.hardware.enableRedistributableFirmware;
+      mkDashDefault
+      config.hardware.enableRedistributableFirmware;
   };
 
-  security.rtkit.enable = true;
+  security.rtkit.enable = mkDashDefault true;
 
   environment.variables = {
-    XDG_CACHE_HOME = "$HOME/.cache";
-    DIRENV_LOG_FORMAT = "";
-    QT_QPA_PLATFORMTHEME = "qt5ct";
+    XDG_CACHE_HOME = mkDashDefault "$HOME/.cache";
+    DIRENV_LOG_FORMAT = mkDashDefault "";
+    QT_QPA_PLATFORMTHEME = mkDashDefault "qt5ct";
   };
 
   # allows user change later on
   users = {
-    mutableUsers = true;
+    mutableUsers = mkDashDefault true;
     users.${username} = {
-      isNormalUser = true;
-      description = username;
+      isNormalUser = mkDashDefault true;
+      description = mkDashDefault username;
       extraGroups = [
         "networkmanager"
         "wheel"
@@ -167,7 +168,7 @@ in {
       ];
       # this password will only last for the first login
       # e.g. login, then change to whatever else, this also ensures no public hash is available
-      password = "firstlogin";
+      password = mkDashDefault "firstlogin";
     };
   };
 }

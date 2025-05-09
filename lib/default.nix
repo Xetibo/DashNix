@@ -105,6 +105,7 @@
             homeMods = mods.home;
             additionalHomeMods = additionalMods.home;
             additionalInputs = additionalInputs;
+            mkDashDefault = import ./override.nix {inherit lib;};
           };
         in
           inputs.unstable.lib.nixosSystem {

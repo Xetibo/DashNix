@@ -1,4 +1,5 @@
 {
+  mkDashDefault,
   config,
   lib,
   ...
@@ -6,30 +7,30 @@
   username = config.conf.username;
 in {
   manual = {
-    html.enable = false;
-    json.enable = false;
-    manpages.enable = false;
+    html.enable = mkDashDefault false;
+    json.enable = mkDashDefault false;
+    manpages.enable = mkDashDefault false;
   };
 
-  fonts.fontconfig.enable = true;
+  fonts.fontconfig.enable = mkDashDefault true;
 
   home = {
-    username = username;
-    homeDirectory = "/home/${username}";
+    username = mkDashDefault username;
+    homeDirectory = mkDashDefault "/home/${username}";
     sessionPath = ["$HOME/.cargo/bin"];
 
-    enableNixpkgsReleaseCheck = false;
+    enableNixpkgsReleaseCheck = mkDashDefault false;
     sessionVariables = {
-      GOROOT = "$HOME/.go";
-      QT_QPA_PLATFORMTHEME = "qt5ct";
+      GOROOT = mkDashDefault "$HOME/.go";
+      QT_QPA_PLATFORMTHEME = mkDashDefault "qt5ct";
     };
 
-    keyboard = null;
+    keyboard = mkDashDefault null;
   };
 
   programs.nix-index = {
-    enable = true;
-    enableFishIntegration = true;
+    enable = mkDashDefault true;
+    enableFishIntegration = mkDashDefault true;
   };
 
   nix = {

@@ -1,4 +1,5 @@
 {
+  mkDashDefault,
   additionalHomeConfig,
   additionalHomeMods,
   additionalInputs,
@@ -16,17 +17,18 @@
   ...
 }: {
   xdg = {
-    portal.config.common.default = "*";
+    portal.config.common.default = mkDashDefault "*";
     portal = {
-      enable = true;
+      enable = mkDashDefault true;
       extraPortals = [pkgs.xdg-desktop-portal-gtk];
     };
   };
   home-manager = {
-    useGlobalPkgs = true;
-    useUserPackages = true;
+    useGlobalPkgs = mkDashDefault true;
+    useUserPackages = mkDashDefault true;
     extraSpecialArgs = {
       inherit inputs root additionalInputs alternativePkgs system stable unstable;
+      mkDashDefault = import ../lib/override.nix {inherit lib;};
     };
 
     users.${config.conf.username} = {

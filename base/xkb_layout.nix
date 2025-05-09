@@ -1,4 +1,8 @@
-{pkgs, ...}: let
+{
+  mkDashDefault,
+  pkgs,
+  ...
+}: let
   layout = pkgs.writeText "dashie" ''
     xkb_symbols "dashie"
     {
@@ -10,7 +14,7 @@
     };
   '';
 in {
-  environment.systemPackages = [pkgs.xorg.xkbcomp];
+  environment.systemPackages = mkDashDefault [pkgs.xorg.xkbcomp];
   services.xserver.xkb.extraLayouts.dashie = {
     description = "US layout with 'umlaut'";
     languages = ["eng"];
