@@ -1,4 +1,5 @@
 {
+  mkDashDefault,
   config,
   lib,
   options,
@@ -84,14 +85,15 @@
       if config.mods.basePackages.enable
       then
         {
-          upower.enable = true;
+          preload.enable = mkDashDefault true;
+          upower.enable = mkDashDefault true;
           dbus = {
-            enable = true;
+            enable = mkDashDefault true;
           };
           avahi = {
-            enable = true;
-            nssmdns4 = true;
-            openFirewall = true;
+            enable = mkDashDefault true;
+            nssmdns4 = mkDashDefault true;
+            openFirewall = mkDashDefault true;
           };
         }
         // config.mods.basePackages.specialServices
@@ -102,23 +104,23 @@
       then
         {
           nix-ld = {
-            enable = true;
+            enable = mkDashDefault true;
             libraries = with pkgs; [
               jdk
               zlib
             ];
           };
           direnv = {
-            package = pkgs.direnv;
-            silent = false;
-            loadInNixShell = true;
-            direnvrcExtra = "";
+            package = mkDashDefault pkgs.direnv;
+            silent = mkDashDefault false;
+            loadInNixShell = mkDashDefault true;
+            direnvrcExtra = mkDashDefault "";
             nix-direnv = {
-              enable = true;
-              package = pkgs.nix-direnv;
+              enable = mkDashDefault true;
+              package = mkDashDefault pkgs.nix-direnv;
             };
           };
-          gnupg.agent.enable = true;
+          gnupg.agent.enable = mkDashDefault true;
         }
         // config.mods.basePackages.specialPrograms
       else config.mods.basePackages.specialPrograms;

@@ -32,7 +32,7 @@
     };
 
     users.${config.conf.username} = {
-      disabledModules = lib.mkDefault ["programs/anyrun.nix"];
+      disabledModules = ["programs/anyrun.nix"];
       imports =
         [
           ./common.nix

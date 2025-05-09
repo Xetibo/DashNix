@@ -1,4 +1,5 @@
 {
+  mkDashDefault,
   config,
   lib,
   options,
@@ -297,7 +298,7 @@ in {
 
                 cursor = {
                   enable_hyprcursor = true;
-                  no_hardware_cursors = lib.mkDefault config.mods.gpu.nvidia.enable;
+                  no_hardware_cursors = mkDashDefault config.mods.gpu.nvidia.enable;
                   # done with nix, this would break the current setup otherwise
                   sync_gsettings_theme = false;
                 };
