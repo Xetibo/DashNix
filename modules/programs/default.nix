@@ -28,6 +28,7 @@
     ./mime.nix
     ./ncspot.nix
     ./nextcloud.nix
+    ./onedrive.nix
     ./oxi
     ./piper.nix
     ./plymouth.nix
