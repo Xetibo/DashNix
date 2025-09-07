@@ -40,7 +40,7 @@ in {
     extraGroups = ["wheel"];
   };
 
-  image.baseName = lib.mkForce "Dashnix";
+  image.baseName = lib.mkForce "DashNix";
 
   programs = {
     hyprland = {

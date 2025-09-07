@@ -7,6 +7,7 @@ jobs:
   build:
     name: Release
     permissions:
+      actions: read
       contents: read
     runs-on: ubuntu-latest
     steps:
@@ -22,8 +23,9 @@ jobs:
         run: nix build github:${{ github.repository }}/${{ github.sha }}#iso --no-write-lock-file
       - name: Prepare ISO for upload
         run: |
-          cp -r --dereference --no-preserve=mode,ownership result/ public/
+          cp -r --dereference --no-preserve=mode,ownership result/iso/DashNix.iso DashNix.iso
       - name: upload ISO
         uses: softprops/action-gh-release@v1
         with:
-          path: path/
+          files: |
+            DashNix.iso
