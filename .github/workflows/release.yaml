@@ -6,9 +6,7 @@ on:
 jobs:
   build:
     name: Release
-    permissions:
-      actions: read
-      contents: read
+    permissions: write-all
     runs-on: ubuntu-latest
     steps:
       - name: Install Nix
