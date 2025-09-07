@@ -115,6 +115,7 @@ in {
         "https://oxicalc.cachix.org"
         "https://hyprdock.cachix.org"
         "https://reset.cachix.org"
+        "https://dashvim.cachix.org"
       ];
 
       trusted-public-keys = [
@@ -128,6 +129,7 @@ in {
         "hyprdock.cachix.org-1:HaROK3fBvFWIMHZau3Vq1TLwUoJE8yRbGLk0lEGzv3Y="
         "reset.cachix.org-1:LfpnUUdG7QM/eOkN7NtA+3+4Ar/UBeYB+3WH+GjP9Xo="
         "chaotic-nyx.cachix.org-1:HfnXSw4pj95iI/n17rIDy40agHj12WfF+Gqk6SonIT8="
+        "dashvim.cachix.org-1:uLRdxp1WOWHnsZZtu3SwUWZRsvC7SXo0Gyk3tIefuL0="
       ];
 
       experimental-features = mkDashDefault "nix-command flakes pipe-operators";
