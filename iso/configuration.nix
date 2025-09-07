@@ -1,58 +1,77 @@
 {
   pkgs,
-  lib,
   modulesPath,
+  lib,
   self,
   inputs,
   ...
 }: let
   system = "x86_64-linux";
 in {
-  imports = ["${modulesPath}/installer/cd-dvd/installation-cd-minimal.nix"];
+  imports = ["${modulesPath}/installer/cd-dvd/iso-image.nix"];
   nixpkgs.hostPlatform = {
     inherit system;
   };
 
   environment.systemPackages = with pkgs; [
-    neovim
+    inputs.dashvim.packages.${system}.minimal
     disko
     git
-    vesktop
-    vscodium
     firefox
     kitty
     gnome-disk-utility
     inputs.disko.packages.${system}.disko-install
   ];
+
   networking = {
     wireless.enable = false;
     networkmanager.enable = true;
   };
+
   nix.settings.experimental-features = [
     "nix-command"
     "flakes"
     "pipe-operators"
   ];
 
-  # gnome is a good default that works with every gpu and doesn't require knowledge about custom keybinds.
-  services = {
-    xserver = {
+  users.users.nixos = {
+    isNormalUser = true;
+    password = "nixos";
+    extraGroups = ["wheel"];
+  };
+
+  image.baseName = lib.mkForce "Dashnix";
+
+  programs = {
+    hyprland = {
       enable = true;
-      displayManager = {
-        gdm.enable = true;
-      };
-      desktopManager = {
-        gnome.enable = true;
-      };
+      withUWSM = true;
+      xwayland.enable = false;
     };
+    uwsm.enable = true;
+  };
+
+  fonts.packages = [pkgs.adwaita-fonts];
+  i18n.defaultLocale = "en_US.UTF-8";
+
+  services = {
     displayManager.autoLogin = {
       enable = true;
       user = "nixos";
     };
+    greetd = {
+      enable = true;
+      settings = {
+        terminal.vt = 1;
+        default_session = {
+          command = "${lib.getExe pkgs.hyprland}";
+          user = "nixos";
+        };
+      };
+    };
   };
 
   isoImage = {
-    isoName = lib.mkForce "DashNix.iso";
     makeEfiBootable = true;
     makeUsbBootable = true;
     contents = [
@@ -62,4 +81,6 @@ in {
       }
     ];
   };
+
+  system.stateVersion = "25.11";
 }

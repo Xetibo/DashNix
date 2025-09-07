@@ -42,7 +42,7 @@
     oxipaste.url = "github:Xetibo/OxiPaste";
     oxirun.url = "github:Xetibo/OxiRun";
     dashvim.url = "github:Xetibo/DashVim";
-    # For now until merged into Xetibo
+
     hyprdock.url = "github:Xetibo/hyprdock";
     reset.url = "github:Xetibo/ReSet";
     reset-plugins.url = "github:Xetibo/ReSet-Plugins";
@@ -106,7 +106,7 @@
       inherit (inputs.unstable) lib;
       inherit (dashNixLib) buildSystems;
     };
-    lint = unstable.statix;
+    lint = inputs.statix.packages.${currentSystem}.default;
     format = unstable.alejandra;
     dashNixInputs = inputs;
     stablePkgs = stable;

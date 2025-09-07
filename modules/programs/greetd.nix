@@ -60,7 +60,7 @@
         # no idea if these are written correctly
         example = [
           pkgs.niri
-          pkgs.river
+          pkgs.river-classic
           pkgs.swayfx
         ];
         type = with lib.types; listOf package;

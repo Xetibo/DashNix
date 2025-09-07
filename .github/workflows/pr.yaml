@@ -1,13 +1,11 @@
 # inspired by https://github.com/danth/stylix/blob/master/.github/workflows/docs.yml
-name: Rust-build
+name: PR check
 on:
-  push:
-    branches: ["main"]
   pull_request:
     branches: ["main"]
 jobs:
   build:
-    name: Build
+    name: check
     permissions:
       contents: read
     runs-on: ubuntu-latest
@@ -17,7 +15,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           extra-conf: |
-            extra-experimental-features = nix-command flakes
+            extra-experimental-features = nix-command flakes pipe-operators
       - name: Set up cache
         uses: DeterminateSystems/magic-nix-cache-action@main
       - name: action
@@ -30,4 +28,8 @@ jobs:
           name: dashnix
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
       - name: Linter check
-        run: nix -L build github:${{ github.repository }}/${{ github.sha }} --no-write-lock-file
+        run: nix run --no-write-lock-file github:${{ github.repository }}/${{ github.sha }}#lint -- check
+      - name: Format check
+        run: nix run --no-write-lock-file github:${{ github.repository }}/${{ github.sha }}#format -- --check .
+      - name: Build docs
+        run: nix -L build github:${{ github.repository }}/${{ github.sha }}#docs --no-write-lock-file
