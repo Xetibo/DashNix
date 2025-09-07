@@ -4,6 +4,8 @@
   config,
   pkgs,
   options,
+  inputs,
+  system,
   ...
 }: let
   font_family = "${config.mods.stylix.fonts.monospace.name}";
@@ -511,6 +513,7 @@ in {
       d-spy
       tmux
       tmate
+      inputs.compose.packages.${system}.default
     ];
   in
     lib.mkIf config.mods.coding.enable (

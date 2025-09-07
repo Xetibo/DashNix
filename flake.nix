@@ -51,6 +51,8 @@
 
     # absolute insanity
     chaoticNyx.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
+
+    compose.url = "github:garnix-io/nixos-compose";
   };
 
   outputs = {self, ...} @ inputs: let
@@ -113,5 +115,6 @@
     unstablePkgs = unstable;
     modules = ./modules;
     iso = dashNixLib.buildIso.config.system.build.isoImage;
+    nixosConfigurations = dashNixLib.buildSystems {root = ./example/.;};
   };
 }

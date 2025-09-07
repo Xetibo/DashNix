@@ -4,13 +4,13 @@
   # variables for system
   conf = {
     # TODO your username
-    username = "YOURNAME";
+    username = "exampleName";
     # TODO only needed when you use intel -> amd is default
     # cpu = "intel";
     # TODO your xkb layout
-    locale = "something.UTF-8";
+    locale = "en_US.UTF-8";
     # TODO your timezone
-    timezone = "CONTINENT/CITY";
+    timezone = "Europe/Zurich";
   };
 
   # modules
