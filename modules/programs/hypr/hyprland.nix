@@ -360,9 +360,9 @@ in {
                   sync_gsettings_theme = mkDashDefault false;
                 };
 
-                gestures = {
-                  workspace_swipe = mkDashDefault true;
-                };
+                gesture = [
+                  "3, horizontal, workspace"
+                ];
 
                 monitor = mkDashDefault config.mods.hypr.hyprland.monitor;
                 workspace = mkDashDefault config.mods.hypr.hyprland.workspace;
