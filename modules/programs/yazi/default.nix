@@ -38,7 +38,7 @@
     };
     plugins = lib.mkOption {
       default = {
-        inherit (pkgs.yaziPlugins) piper diff gitui;
+        inherit (pkgs.yaziPlugins) piper diff gitui wl-clipboard;
       };
       example = {};
       type = with lib.types; attrsOf anything;
@@ -55,7 +55,7 @@
           inherit (conf) enable;
           settings = conf.settings // config.mods.yazi.additionalKeymap;
           keymap = conf.keymap // config.mods.yazi.additionalConfig;
-          plugins = config.mods.yazi.plugins;
+          inherit (config.mods.yazi) plugins;
         };
       }
     );
