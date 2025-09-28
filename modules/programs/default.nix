@@ -1,5 +1,6 @@
 {
   imports = [
+    ./niri.nix
     ./acpid.nix
     ./anyrun.nix
     ./basePackages.nix

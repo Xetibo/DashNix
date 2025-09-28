@@ -55,7 +55,8 @@
       };
       environments = lib.mkOption {
         default = [
-          inputs.hyprland.packages.${config.conf.system}.hyprland
+          (lib.mkIf config.mods.hypr.hyprland.enable inputs.hyprland.packages.${config.conf.system}.hyprland)
+          (lib.mkIf config.mods.niri.enable pkgs.niri)
         ];
         # no idea if these are written correctly
         example = [
