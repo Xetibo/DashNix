@@ -49,6 +49,7 @@
     ./virtmanager.nix
     ./xkb.nix
     ./xone.nix
+    ./wm.nix
     ./yazi
   ];
 }

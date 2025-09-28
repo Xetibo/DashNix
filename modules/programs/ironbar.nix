@@ -1,5 +1,4 @@
 {
-  mkDashDefault,
   lib,
   config,
   pkgs,
@@ -7,7 +6,7 @@
   options,
   ...
 }: let
-  username = config.conf.username;
+  inherit (config.conf) username;
   base16 = pkgs.callPackage inputs.base16.lib {};
   scheme = base16.mkSchemeAttrs config.stylix.base16Scheme;
   ironbarDefaultConfig = useBatteryModule: {
@@ -183,8 +182,15 @@
     ];
   };
   monitorConfig = useBatteryModule:
-    if config.mods.hypr.hyprland.ironbarSingleMonitor
-    then {monitors.${config.mods.hypr.hyprland.defaultMonitor} = ironbarDefaultConfig useBatteryModule;}
+    if config.mods.ironbar.ironbarSingleMonitor
+    then {
+      monitors.${
+        if config.mods.wm.monitors != []
+        then (builtins.elemAt config.mods.wm.monitors 0).name
+        else ""
+      } =
+        ironbarDefaultConfig useBatteryModule;
+    }
     else ironbarDefaultConfig useBatteryModule;
 in {
   options.mods = {
@@ -194,6 +200,14 @@ in {
         example = true;
         type = lib.types.bool;
         description = "Enables ironbar";
+      };
+      ironbarSingleMonitor = lib.mkOption {
+        default = true;
+        example = false;
+        type = lib.types.bool;
+        description = ''
+          Whether to use ironbar on a single monitor.
+        '';
       };
       useDefaultConfig = lib.mkOption {
         default = true;
@@ -257,6 +271,7 @@ in {
               @import url("/home/${username}/.config/gtk-3.0/gtk.css");
 
               @define-color primary #${scheme.base0D};
+              @define-color warning #${scheme.base0F};
               @define-color muted-text #${scheme.base05};
               @define-color background #${scheme.base00};
               @define-color secondary-background #${scheme.base02};
@@ -404,6 +419,10 @@ in {
               .workspaces .item:hover {
                 background-color: @secondary-background;
                 color: @primary;
+              }
+
+              .workspaces .item:not(.visible) {
+                color: @warning;
               }
 
               .workspaces .item.focused {

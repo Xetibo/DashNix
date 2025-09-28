@@ -18,7 +18,10 @@
         '';
       };
       monitor = lib.mkOption {
-        default = "${config.mods.hypr.hyprland.defaultMonitor}";
+        default =
+          if config.mods.wm.monitors != []
+          then (builtins.elemAt config.mods.wm.monitors 0).name
+          else "";
         example = "eDP-1";
         type = lib.types.str;
         description = ''
@@ -27,7 +30,10 @@
         '';
       };
       scale = lib.mkOption {
-        default = "${config.mods.hypr.hyprland.defaultMonitorScale}";
+        default =
+          if config.mods.wm.monitors != []
+          then builtins.toString (builtins.elemAt config.mods.wm.monitors 0).scale
+          else "";
         example = "1.5";
         type = lib.types.str;
         description = ''
@@ -46,7 +52,14 @@
         description = "The compositor/greeter command to run";
       };
       resolution = lib.mkOption {
-        default = "${config.mods.hypr.hyprland.defaultMonitorMode}";
+        default =
+          if config.mods.wm.monitors != []
+          then let
+            resX = builtins.toString (builtins.elemAt config.mods.wm.monitors 0).resolutionX;
+            resY = builtins.toString (builtins.elemAt config.mods.wm.monitors 0).resolutionY;
+            refresh = builtins.toString (builtins.elemAt config.mods.wm.monitors 0).refreshrate;
+          in "${resX}x${resY}@${refresh}"
+          else "";
         example = "3440x1440@180";
         type = lib.types.str;
         description = ''
@@ -83,7 +96,7 @@
   };
 
   config = let
-    username = config.conf.username;
+    inherit (config.conf) username;
   in
     lib.mkIf config.mods.greetd.enable (
       lib.optionalAttrs (options ? environment) {

@@ -54,8 +54,8 @@
     lib.optionalAttrs (options ? home.packages) {
       programs = {
         hyprdock = {
-          enable = config.mods.oxi.hyprdock.enable;
-          settings = config.mods.oxi.hyprdock.settings;
+          inherit (config.mods.oxi.hyprdock) enable;
+          inherit (config.mods.oxi.hyprdock) settings;
         };
         oxicalc.enable = lib.mkIf config.mods.oxi.oxicalc.enable true;
         ReSet = lib.mkIf config.mods.oxi.ReSet.enable {
@@ -75,7 +75,7 @@
       };
     }
     // lib.optionalAttrs (options ? services.logind) {
-      services.logind.lidSwitchExternalPower = "ignore";
+      services.logind.settings.Login.HandleLidSwitchExternalPower = "ignore";
     }
   );
 }

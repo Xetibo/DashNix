@@ -56,6 +56,7 @@ in {
               abbr --add ls 'lsd'
               abbr --add :q 'exit'
               abbr --add gh 'git push origin'
+              abbr --add gu 'git push upstream'
               abbr --add gl 'git pull origin'
               abbr --add gm 'git commit -m'
               abbr --add ga "git add -A"

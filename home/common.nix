@@ -2,6 +2,7 @@
   mkDashDefault,
   config,
   lib,
+  pkgs,
   ...
 }: let
   username = config.conf.username;

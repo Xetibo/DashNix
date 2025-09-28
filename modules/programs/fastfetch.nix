@@ -1,5 +1,4 @@
 {
-  mkDashDefault,
   pkgs,
   lib,
   options,

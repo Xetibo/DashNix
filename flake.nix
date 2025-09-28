@@ -10,7 +10,7 @@
       url = "github:nix-community/lanzaboote/v0.4.2";
       inputs.nixpkgs.follows = "unstable";
     };
-    statix.url = "github:oppiliappan/statix";
+    statix.url = "github:oppiliappan/statix?ref=master";
     # Darkreader requires es20, hence a stable pin
     pkgsDarkreader.url = "github:NixOs/nixpkgs/nixos-24.11";
 

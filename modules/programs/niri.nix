@@ -6,12 +6,7 @@
   pkgs,
   ...
 }: let
-  browserName =
-    if (builtins.isString config.mods.homePackages.browser)
-    then config.mods.homePackages.browser
-    else if config.mods.homePackages.browser ? meta && config.mods.homePackages.browser.meta ? mainProgram
-    then config.mods.homePackages.browser.meta.mainProgram
-    else config.mods.homePackages.browser.pname;
+  defaultWmConf = import ../../lib/wm.nix {inherit lib;};
 in {
   options.mods.niri = {
     enable = lib.mkOption {
@@ -20,6 +15,23 @@ in {
       type = lib.types.bool;
       description = ''
         Enable Niri
+      '';
+    };
+    useDefaultConfig = lib.mkOption {
+      default = true;
+      example = false;
+      type = lib.types.bool;
+      description = ''
+        Use preconfigured Niri config.
+      '';
+    };
+    customConfig = lib.mkOption {
+      default = '''';
+      example = '''';
+      type = lib.types.lines;
+      description = ''
+        Custom Niri configuration.
+        Will be merged with default configuration if enabled.
       '';
     };
   };
@@ -44,8 +56,243 @@ in {
         xwayland-satellite
       ];
 
-      xdg.configFile."niri/config.kdl" = {
-        text =
+      xdg.configFile."niri/config.kdl" = let
+        mkNiriMod = mods:
+          builtins.map (mod:
+            if mod == "Mod"
+            then config.mods.wm.modKey + "+"
+            else "${mod}" + "+")
+          mods
+          |> lib.strings.concatStringsSep "";
+        mkNiriArg = args:
+          if args != []
+          then "\"${(lib.strings.concatStringsSep " " args)}\""
+          else "";
+        mkNiriCommand = bind: let
+          args = bind.args or [];
+        in
+          if bind.command == "quit"
+          then "quit;"
+          else if bind.command == "killActive"
+          then "close-window;"
+          else if bind.command == "moveFocusTop"
+          then "focus-window-up;"
+          else if bind.command == "focusWorkspace"
+          then "focus-workspace" + " " + mkNiriArg args + ";"
+          else if bind.command == "moveWindowRight"
+          then "move-column-right-or-to-monitor-right;"
+          else if bind.command == "moveWindowDown"
+          then "move-window-down;"
+          else if bind.command == "moveWindowLeft"
+          then "move-column-left-or-to-monitor-left;"
+          else if bind.command == "moveWindowUp"
+          then "move-window-up;"
+          else if bind.command == "moveFocusUp"
+          then "focus-window-up;"
+          else if bind.command == "moveFocusRight"
+          then "focus-column-or-monitor-right;"
+          else if bind.command == "moveFocusDown"
+          then "focus-window-down;"
+          else if bind.command == "moveFocusLeft"
+          then "focus-column-or-monitor-left;"
+          else if bind.command == "toggleFloating"
+          then "toggle-window-floating;"
+          else if bind.command == "toggleFullscreen"
+          then "fullscreen-window;"
+          else if bind.command == "moveToWorkspace"
+          then "move-window-to-workspace" + " " + mkNiriArg args + ";"
+          else if bind.command == "spawn"
+          then "spawn" + " " + mkNiriArg args + ";"
+          else if bind.command == "spawn-sh"
+          then "spawn-sh" + " " + mkNiriArg args + ";"
+          else if bind.command.niri != null
+          then bind.command.niri + " " + mkNiriArg args + ";"
+          else "";
+
+        mkNiriBinds = cfg:
+          ''            binds {
+          ''
+          + (
+            (
+              builtins.map (
+                bind:
+                /*
+                kdl
+                */
+                  if bind ? key && bind ? command
+                  then ''
+                    ${mkNiriMod (bind.modKeys or [])}${bind.key} ${
+                      if
+                        bind ? meta
+                        && bind.meta ? niri
+                      then
+                        (
+                          if
+                            bind.meta.niri ? desc
+                            && bind.meta.niri.desc != ""
+                          then "hotkey-overlay-title=\"" + bind.meta.niri.desc + "\""
+                          else ""
+                        )
+                        + " "
+                        + (
+                          if
+                            bind.meta.niri ? repeat
+                            && bind.meta.niri.repeat
+                          then "repeat=true"
+                          else "repeat=false"
+                        )
+                        + " "
+                        + (
+                          if
+                            bind.meta.niri ? allowWhileLocked
+                            && bind.meta.niri.allowWhileLocked
+                          then "allow-when-locked=true"
+                          else ""
+                        )
+                        + " "
+                        + (
+                          if
+                            bind.meta.niri ? allowInhibit
+                            && bind.meta.niri.allowInhibit
+                          then "allow-inhibiting=true"
+                          else "allow-inhibiting=false"
+                        )
+                      else ""
+                    } { ${
+                      mkNiriCommand bind
+                    } }
+                  ''
+                  else ''''
+              )
+              ((
+                  cfg.mods.wm.binds
+                  ++ (
+                    if cfg.mods.wm.useDefaultBinds
+                    then defaultWmConf.defaultBinds cfg
+                    else []
+                  )
+                )
+                |> builtins.filter (bind: !(hasInvalidCustomCommand bind)))
+            )
+            |> lib.strings.concatLines
+          )
+          + ''
+            }
+          '';
+        mkVrr = vrr:
+          if vrr
+          then "true"
+          else "false";
+        mkNiriMonitors = cfg:
+          (builtins.map (
+              monitor:
+              # TODO vrr
+              /*
+              kdl
+              */
+              ''
+                output "${monitor.name}" {
+                    variable-refresh-rate on-demand=${mkVrr monitor.vrr}
+                    mode "${builtins.toString monitor.resolutionX}x${builtins.toString monitor.resolutionY}@${builtins.toString monitor.refreshrate}"
+                    scale ${builtins.toString monitor.scale}
+                    transform "${
+                  if (monitor.transform == "0")
+                  then "normal"
+                  else monitor.transform
+                }"
+                    position x=${builtins.toString monitor.positionX} y=${builtins.toString monitor.positionY}
+                }
+              ''
+            )
+            cfg.mods.wm.monitors)
+          |> lib.strings.concatLines;
+        mkNiriWorkspaces = cfg:
+          (builtins.map (
+              workspace:
+              /*
+              kdl
+              */
+              ''
+                workspace "${workspace.name}" {
+                    open-on-output "${workspace.monitor}"
+                }
+              ''
+            )
+            cfg.mods.wm.workspaces)
+          |> lib.strings.concatLines;
+        mkNiriWindowRules = cfg: (
+          (
+            builtins.map (
+              rule:
+              /*
+              kdl
+              */
+              ''
+                window-rule {
+                    ${rule}
+                }
+              ''
+            )
+            (
+              cfg.mods.wm.windowRules.niri
+              ++ (
+                if cfg.mods.wm.useDefaultWindowRules
+                then defaultWmConf.defaultWindowRules.niri
+                else []
+              )
+            )
+          )
+          |> lib.strings.concatLines
+        );
+        hasInvalidCustomCommand = bind: !(bind ? command) || (!(builtins.isString bind.command) && bind.command.niri or null == null);
+        mkNiriEnv = config: let
+          defaultEnv =
+            if config.mods.wm.useDefaultEnv
+            then defaultWmConf.defaultEnv config
+            else {
+              all = {};
+              niri = {};
+            };
+          userEnv =
+            if config.mods.wm.env ? all
+            then config.mods.wm.env.all // config.mods.wm.env.niri
+            else config.mods.wm.env;
+          env =
+            userEnv
+            // defaultEnv.all
+            // defaultEnv.niri;
+        in
+          ''
+            environment {
+          ''
+          + (
+            lib.attrsets.mapAttrsToList (
+              name: value: "${name} \"${value}\""
+            )
+            env
+            |> lib.strings.concatLines
+          )
+          + ''
+            }
+          '';
+        mkNiriAutoStart = config: let
+          defaultStartup =
+            if config.mods.wm.useDefaultStartup
+            then defaultWmConf.defaultStartup config
+            else {
+              all = {};
+              niri = {};
+            };
+          userStartup =
+            if config.mods.wm.startup ? all
+            then config.mods.wm.startup.all ++ config.mods.wm.startup.niri
+            else config.mods.wm.startup;
+          autoStart = userStartup ++ defaultStartup.all ++ defaultStartup.niri;
+        in
+          (builtins.map (value: "spawn-at-startup \"${value}\"")
+            autoStart)
+          |> lib.strings.concatLines;
+        defaultConfig =
           /*
           kdl
           */
@@ -69,29 +316,8 @@ in {
                     accel-speed 0.2
                     accel-profile "flat"
                 }
+
                 focus-follows-mouse max-scroll-amount="25%"
-            }
-
-            // Outputs
-            output "DP-1" {
-                mode "3440x1440@180"
-                scale 1
-                transform "normal"
-                position x=2560 y=0
-            }
-
-            output "DP-2" {
-                mode "2560x1440@165"
-                scale 1
-                transform "normal"
-                position x=0 y=0
-            }
-
-            output "DP-3" {
-                mode "1920x1080@144.001"
-                scale 1
-                transform "90"
-                position x=6000 y=0
             }
 
             layout {
@@ -103,15 +329,14 @@ in {
                 preset-column-widths {
                     proportion 0.33333
                     proportion 0.5
-                    proportion 0.66667
+                    proportion 1.0
                 }
 
                 default-column-width { proportion 0.5; }
-                // You can change how the focus ring looks.
                 focus-ring {
                     width 3
                     inactive-color "#505050"
-                    active-gradient from="#ff0000" to="#0000ff" angle=45
+                    active-gradient from="#ff0000" to="#00ff00" angle=45
                 }
 
                 border {
@@ -129,338 +354,26 @@ in {
             }
 
             // Autostart
-            spawn-at-startup "ironbar"
-            spawn-at-startup "oxinoti"
-            spawn-at-startup "oxipaste_daemon"
-
-            // To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
-            // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
 
             hotkey-overlay {
                 skip-at-startup
             }
 
-            // Uncomment this line to ask the clients to omit their client-side decorations if possible.
-            // If the client will specifically ask for CSD, the request will be honored.
-            // Additionally, clients will be informed that they are tiled, removing some client-side rounded corners.
-            // This option will also fix border/focus ring drawing behind some semitransparent windows.
-            // After enabling or disabling this, you need to restart the apps for this to take effect.
             prefer-no-csd
-
-            // You can change the path where screenshots are saved.
-            // A ~ at the front will be expanded to the home directory.
-            // The path is formatted with strftime(3) to give you the screenshot date and time.
-            screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
-
-            // You can also set this to null to disable saving screenshots to disk.
-            // screenshot-path null
-
-            // Animation settings.
-            // The wiki explains how to configure individual animations:
-            // https://yalter.github.io/niri/Configuration:-Animations
-            animations {
-                // Uncomment to turn off all animations.
-                // off
-
-                // Slow down all animations by this factor. Values below 1 speed them up instead.
-                // slowdown 3.0
-            }
-
-            // Block screencapture
-            window-rule {
-                match app-id=r#"^org\.keepassxc\.KeePassXC$"#
-                match app-id=r#"^org\.gnome\.World\.Secrets$"#
-
-                block-out-from "screen-capture"
-            }
-
-            window-rule {
-                match app-id=r#"^nheko$"#
-                match app-id=r#"^vesktop$"#
-
-                open-maximized true
-            }
-
-            // General rules
-            window-rule {
-                geometry-corner-radius 12
-                clip-to-geometry true
-            }
-
-
-            binds {
-                // Keys consist of modifiers separated by + signs, followed by an XKB key name
-                // in the end. To find an XKB name for a particular key, you may use a program
-                // like wev.
-                //
-                // "Mod" is a special modifier equal to Super when running on a TTY, and to Alt
-                // when running as a winit window.
-                //
-                // Most actions that you can bind here can also be invoked programmatically with
-                // `niri msg action do-something`.
-
-                // Mod-Shift-/, which is usually the same as Mod-?,
-                // shows a list of important hotkeys.
-                Mod+Shift+Slash { show-hotkey-overlay; }
-
-                // Suggested binds for running programs: terminal, app launcher, screen locker.
-                Mod+T hotkey-overlay-title="Open a Terminal: alacritty" { spawn "kitty"; }
-                Mod+R hotkey-overlay-title="Run an Application: fuzzel" { spawn "oxirun"; }
-                Super+Shift+L hotkey-overlay-title="Lock the Screen: hyprlock" { spawn "hyprlock"; }
-                Mod+F hotkey-overlay-title="Browser: Zen" { spawn "zen"; }
-                Mod+G hotkey-overlay-title="Run oxicalc" { spawn "oxicalc"; }
-                Mod+A hotkey-overlay-title="Run Clipboard manager" { spawn "oxipaste"; }
-                Mod+D hotkey-overlay-title="Run Shutdown window" { spawn "oxishut"; }
-                Mod+M hotkey-overlay-title="Run Notification Center" { spawn "oxidash"; }
-
-                // Use spawn-sh to run a shell command. Do this if you need pipes, multiple commands, etc.
-                // Note: the entire command goes as a single argument. It's passed verbatim to `sh -c`.
-                // For example, this is a standard bind to toggle the screen reader (orca).
-                // Super+Alt+S allow-when-locked=true hotkey-overlay-title=null { spawn-sh "pkill orca || exec orca"; }
-
-                // Example volume keys mappings for PipeWire & WirePlumber.
-                // The allow-when-locked=true property makes them work even when the session is locked.
-                // Using spawn-sh allows to pass multiple arguments together with the command.
-                XF86AudioRaiseVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1+"; }
-                XF86AudioLowerVolume allow-when-locked=true { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.1-"; }
-                XF86AudioMute        allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"; }
-                XF86AudioMicMute     allow-when-locked=true { spawn-sh "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"; }
-
-                // Example brightness key mappings for brightnessctl.
-                // You can use regular spawn with multiple arguments too (to avoid going through "sh"),
-                // but you need to manually put each argument in separate "" quotes.
-                XF86MonBrightnessUp allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "+10%"; }
-                XF86MonBrightnessDown allow-when-locked=true { spawn "brightnessctl" "--class=backlight" "set" "10%-"; }
-
-                // Open/close the Overview: a zoomed-out view of workspaces and windows.
-                // You can also move the mouse into the top-left hot corner,
-                // or do a four-finger swipe up on a touchpad.
-                Mod+W repeat=false { toggle-overview; }
-
-                Mod+Q repeat=false { close-window; }
-
-                Mod+Left  { focus-column-left; }
-                Mod+Down  { focus-window-down; }
-                Mod+Up    { focus-window-up; }
-                Mod+Right { focus-column-right; }
-                Mod+J     { focus-column-left; }
-                Mod+K     { focus-window-down; }
-                Mod+L     { focus-window-up; }
-                Mod+semicolon     { focus-column-right; }
-
-                Mod+Ctrl+Left  { move-column-left; }
-                Mod+Ctrl+Down  { move-window-down; }
-                Mod+Ctrl+Up    { move-window-up; }
-                Mod+Ctrl+Right { move-column-right; }
-                Mod+Ctrl+J     { move-column-left; }
-                Mod+Ctrl+K     { move-window-down; }
-                Mod+Ctrl+L     { move-window-up; }
-                Mod+Ctrl+semicolon     { move-column-right; }
-
-                // Alternative commands that move across workspaces when reaching
-                // the first or last window in a column.
-                // Mod+J     { focus-window-or-workspace-down; }
-                // Mod+K     { focus-window-or-workspace-up; }
-                // Mod+Ctrl+J     { move-window-down-or-to-workspace-down; }
-                // Mod+Ctrl+K     { move-window-up-or-to-workspace-up; }
-
-                Mod+Home { focus-column-first; }
-                Mod+End  { focus-column-last; }
-                Mod+Ctrl+Home { move-column-to-first; }
-                Mod+Ctrl+End  { move-column-to-last; }
-
-                Mod+Shift+Left  { focus-monitor-left; }
-                Mod+Shift+Down  { focus-monitor-down; }
-                Mod+Shift+Up    { focus-monitor-up; }
-                Mod+Shift+Right { focus-monitor-right; }
-                Mod+Shift+H     { focus-monitor-left; }
-                Mod+Shift+J     { focus-monitor-down; }
-                Mod+Shift+K     { focus-monitor-up; }
-                Mod+Shift+L     { focus-monitor-right; }
-
-                Mod+Shift+Ctrl+Left  { move-column-to-monitor-left; }
-                Mod+Shift+Ctrl+Down  { move-column-to-monitor-down; }
-                Mod+Shift+Ctrl+Up    { move-column-to-monitor-up; }
-                Mod+Shift+Ctrl+Right { move-column-to-monitor-right; }
-                Mod+Shift+Ctrl+H     { move-column-to-monitor-left; }
-                Mod+Shift+Ctrl+J     { move-column-to-monitor-down; }
-                Mod+Shift+Ctrl+K     { move-column-to-monitor-up; }
-                Mod+Shift+Ctrl+L     { move-column-to-monitor-right; }
-
-                // Alternatively, there are commands to move just a single window:
-                // Mod+Shift+Ctrl+Left  { move-window-to-monitor-left; }
-                // ...
-
-                // And you can also move a whole workspace to another monitor:
-                // Mod+Shift+Ctrl+Left  { move-workspace-to-monitor-left; }
-                // ...
-
-                Mod+Page_Down      { focus-workspace-down; }
-                Mod+Page_Up        { focus-workspace-up; }
-                Mod+U              { focus-workspace-down; }
-                Mod+I              { focus-workspace-up; }
-                Mod+Ctrl+Page_Down { move-column-to-workspace-down; }
-                Mod+Ctrl+Page_Up   { move-column-to-workspace-up; }
-                Mod+Ctrl+U         { move-column-to-workspace-down; }
-                Mod+Ctrl+I         { move-column-to-workspace-up; }
-
-                // Alternatively, there are commands to move just a single window:
-                // Mod+Ctrl+Page_Down { move-window-to-workspace-down; }
-                // ...
-
-                Mod+Shift+Page_Down { move-workspace-down; }
-                Mod+Shift+Page_Up   { move-workspace-up; }
-                Mod+Shift+U         { move-workspace-down; }
-                Mod+Shift+I         { move-workspace-up; }
-
-                // You can bind mouse wheel scroll ticks using the following syntax.
-                // These binds will change direction based on the natural-scroll setting.
-                //
-                // To avoid scrolling through workspaces really fast, you can use
-                // the cooldown-ms property. The bind will be rate-limited to this value.
-                // You can set a cooldown on any bind, but it's most useful for the wheel.
-                Mod+WheelScrollDown      cooldown-ms=150 { focus-workspace-down; }
-                Mod+WheelScrollUp        cooldown-ms=150 { focus-workspace-up; }
-                Mod+Ctrl+WheelScrollDown cooldown-ms=150 { move-column-to-workspace-down; }
-                Mod+Ctrl+WheelScrollUp   cooldown-ms=150 { move-column-to-workspace-up; }
-
-                Mod+WheelScrollRight      { focus-column-right; }
-                Mod+WheelScrollLeft       { focus-column-left; }
-                Mod+Ctrl+WheelScrollRight { move-column-right; }
-                Mod+Ctrl+WheelScrollLeft  { move-column-left; }
-
-                // Usually scrolling up and down with Shift in applications results in
-                // horizontal scrolling; these binds replicate that.
-                Mod+Shift+WheelScrollDown      { focus-column-right; }
-                Mod+Shift+WheelScrollUp        { focus-column-left; }
-                Mod+Ctrl+Shift+WheelScrollDown { move-column-right; }
-                Mod+Ctrl+Shift+WheelScrollUp   { move-column-left; }
-
-                // Similarly, you can bind touchpad scroll "ticks".
-                // Touchpad scrolling is continuous, so for these binds it is split into
-                // discrete intervals.
-                // These binds are also affected by touchpad's natural-scroll, so these
-                // example binds are "inverted", since we have natural-scroll enabled for
-                // touchpads by default.
-                // Mod+TouchpadScrollDown { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.02+"; }
-                // Mod+TouchpadScrollUp   { spawn-sh "wpctl set-volume @DEFAULT_AUDIO_SINK@ 0.02-"; }
-
-                // You can refer to workspaces by index. However, keep in mind that
-                // niri is a dynamic workspace system, so these commands are kind of
-                // "best effort". Trying to refer to a workspace index bigger than
-                // the current workspace count will instead refer to the bottommost
-                // (empty) workspace.
-                //
-                // For example, with 2 workspaces + 1 empty, indices 3, 4, 5 and so on
-                // will all refer to the 3rd workspace.
-                Mod+1 { focus-workspace 1; }
-                Mod+2 { focus-workspace 2; }
-                Mod+3 { focus-workspace 3; }
-                Mod+4 { focus-workspace 4; }
-                Mod+5 { focus-workspace 5; }
-                Mod+6 { focus-workspace 6; }
-                Mod+7 { focus-workspace 7; }
-                Mod+8 { focus-workspace 8; }
-                Mod+9 { focus-workspace 9; }
-                Mod+Ctrl+1 { move-column-to-workspace 1; }
-                Mod+Ctrl+2 { move-column-to-workspace 2; }
-                Mod+Ctrl+3 { move-column-to-workspace 3; }
-                Mod+Ctrl+4 { move-column-to-workspace 4; }
-                Mod+Ctrl+5 { move-column-to-workspace 5; }
-                Mod+Ctrl+6 { move-column-to-workspace 6; }
-                Mod+Ctrl+7 { move-column-to-workspace 7; }
-                Mod+Ctrl+8 { move-column-to-workspace 8; }
-                Mod+Ctrl+9 { move-column-to-workspace 9; }
-
-                // Alternatively, there are commands to move just a single window:
-                // Mod+Ctrl+1 { move-window-to-workspace 1; }
-
-                // Switches focus between the current and the previous workspace.
-                // Mod+Tab { focus-workspace-previous; }
-
-                // The following binds move the focused window in and out of a column.
-                // If the window is alone, they will consume it into the nearby column to the side.
-                // If the window is already in a column, they will expel it out.
-                Mod+BracketLeft  { consume-or-expel-window-left; }
-                Mod+BracketRight { consume-or-expel-window-right; }
-
-                // Consume one window from the right to the bottom of the focused column.
-                Mod+Comma  { consume-window-into-column; }
-                // Expel the bottom window from the focused column to the right.
-                Mod+Period { expel-window-from-column; }
-
-                Mod+Y { switch-preset-column-width; }
-                // Cycling through the presets in reverse order is also possible.
-                // Mod+R { switch-preset-column-width-back; }
-                Mod+Shift+R { switch-preset-window-height; }
-                Mod+Ctrl+R { reset-window-height; }
-                Mod+B { fullscreen-window; }
-
-                // Expand the focused column to space not taken up by other fully visible columns.
-                // Makes the column "fill the rest of the space".
-                Mod+Ctrl+F { expand-column-to-available-width; }
-
-                Mod+C { center-column; }
-
-                // Center all fully visible columns on screen.
-                Mod+Ctrl+C { center-visible-columns; }
-
-                // Finer width adjustments.
-                // This command can also:
-                // * set width in pixels: "1000"
-                // * adjust width in pixels: "-5" or "+5"
-                // * set width as a percentage of screen width: "25%"
-                // * adjust width as a percentage of screen width: "-10%" or "+10%"
-                // Pixel sizes use logical, or scaled, pixels. I.e. on an output with scale 2.0,
-                // set-column-width "100" will make the column occupy 200 physical screen pixels.
-                Mod+Minus { set-column-width "-10%"; }
-                Mod+Equal { set-column-width "+10%"; }
-
-                // Finer height adjustments when in column with other windows.
-                Mod+Shift+Minus { set-window-height "-10%"; }
-                Mod+Shift+Equal { set-window-height "+10%"; }
-
-                // Move the focused window between the floating and the tiling layout.
-                Mod+V       { toggle-window-floating; }
-                Mod+Shift+V { switch-focus-between-floating-and-tiling; }
-
-                // Toggle tabbed column display mode.
-                // Windows in this column will appear as vertical tabs,
-                // rather than stacked on top of each other.
-                // Mod+W { toggle-column-tabbed-display; }
-
-                // Actions to switch layouts.
-                // Note: if you uncomment these, make sure you do NOT have
-                // a matching layout switch hotkey configured in xkb options above.
-                // Having both at once on the same hotkey will break the switching,
-                // since it will switch twice upon pressing the hotkey (once by xkb, once by niri).
-                // Mod+Space       { switch-layout "next"; }
-                // Mod+Shift+Space { switch-layout "prev"; }
-
-                Mod+S { screenshot; }
-                Ctrl+Print { screenshot-screen; }
-                Alt+Print { screenshot-window; }
-
-                // Applications such as remote-desktop clients and software KVM switches may
-                // request that niri stops processing the keyboard shortcuts defined here
-                // so they may, for example, forward the key presses as-is to a remote machine.
-                // It's a good idea to bind an escape hatch to toggle the inhibitor,
-                // so a buggy application can't hold your session hostage.
-                //
-                // The allow-inhibiting=false property can be applied to other binds as well,
-                // which ensures niri always processes them, even when an inhibitor is active.
-                Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
-
-                // The quit action will show a confirmation dialog to avoid accidental exits.
-                Mod+Shift+M { quit; }
-                // Ctrl+Alt+Delete { quit; }
-
-                // Powers off the monitors. To turn them back on, do any input like
-                // moving the mouse or pressing any other key.
-                Mod+Shift+P { power-off-monitors; }
-            }
-          '';
-      };
+          ''
+          + mkNiriMonitors config
+          + mkNiriBinds config
+          + mkNiriWorkspaces config
+          + mkNiriWindowRules config
+          + mkNiriEnv config
+          + mkNiriAutoStart config;
+      in
+        mkDashDefault {
+          text =
+            if config.mods.niri.useDefaultConfig
+            then defaultConfig + config.mods.niri.customConfig
+            else config.mods.niri.customConfig;
+        };
     }
   );
 }
