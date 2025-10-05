@@ -69,7 +69,7 @@ in {
           then "\"${(lib.strings.concatStringsSep " " args)}\""
           else "";
         mkNiriCommand = bind: let
-          args = bind.args or [];
+          inherit (bind) args;
         in
           if bind.command == "quit"
           then "quit;"
