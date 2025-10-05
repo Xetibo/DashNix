@@ -74,26 +74,20 @@ Here is a minimal required configuration.nix (the TODOs mention a required chang
     # default disk config has root home boot and swap partition, overwrite if you want something different
     sops.enable = false;
     nextcloud.enable = false;
-    hypr.hyprland = {
-        # TODO monitor configuration for hyprland (hyprland is default)
-        # should be something like DP-1
-        defaultMonitor = "YOURMONITOR";
-        # width x height  @ refreshrate
-        defaultMonitorMode = "1920x1080@60";
-        # scale for your main monitor
-        defaultMonitorScale = "1";
-        # additional configruation can be done as well
-        # customConfig = {
-        #   monitor = [
-        #     # default
-        #     "${config.mods.hypr.hyprland.defaultMonitor},${config.mods.hypr.hyprland.defaultMonitorMode},0x0,${config.mods.hypr.hyprland.defaultMonitorScale}"
-        #     # second example monitor
-        #     "DP-2,3440x1440@180,auto,1"
-        #     # all others
-        #     ",highrr,auto,1"
-        #   ];
-        # }
-    };
+    wm.monitors = [
+      # Example
+      # {
+      #   name = "DP-1";
+      #   resolutionX = 3440;
+      #   resolutionY = 1440;
+      #   refreshrate = 180;
+      #   positionX = 2560;
+      #   positionY = 0;
+      #   scale = 1;
+      #   transform = "0";
+      #   vrr = false;
+      # }
+    ];
     gpu.nvidia.enable = true;
     kdeConnect.enable = true;
     # login manager:
@@ -234,6 +228,7 @@ These modules attempt to combine the home-manager and nixos packages/options to 
 For package lists, please check the individual modules, as the lists can be long.
 
 - Hyprland: Installs and configures Hyprland with various additional packages
+- Niri: Installs and configures Niri with various additional packages
 - acpid : Enables the acpid daemon
 - base packages : A list of system packages to be installed by default
 - bluetooth : Configures/enables bluetooth and installs tools for bluetooth

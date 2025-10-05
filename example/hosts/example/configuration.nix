@@ -18,26 +18,20 @@
     # default disk config has root home boot and swap partition, overwrite if you want something different
     sops.enable = false;
     nextcloud.enable = false;
-    hypr.hyprland = {
-      # TODO monitor configuration for hyprland (hyprland is default)
-      # should be something like DP-1
-      defaultMonitor = "YOURMONITOR";
-      # width x height  @ refreshrate
-      defaultMonitorMode = "1920x1080@60";
-      # scale for your main monitor
-      defaultMonitorScale = "1";
-      # additional configruation can be done as well
-      # customConfig = {
-      #   monitor = [
-      #     # default
-      #     "${config.mods.hypr.hyprland.defaultMonitor},${config.mods.hypr.hyprland.defaultMonitorMode},0x0,${config.mods.hypr.hyprland.defaultMonitorScale}"
-      #     # second example monitor
-      #     "DP-2,3440x1440@180,auto,1"
-      #     # all others
-      #     ",highrr,auto,1"
-      #   ];
+    wm.monitors = [
+      # Example
+      # {
+      #   name = "DP-1";
+      #   resolutionX = 3440;
+      #   resolutionY = 1440;
+      #   refreshrate = 180;
+      #   positionX = 2560;
+      #   positionY = 0;
+      #   scale = 1;
+      #   transform = "0";
+      #   vrr = false;
       # }
-    };
+    ];
     gpu.nvidia.enable = true;
     kdeConnect.enable = true;
     # login manager:
