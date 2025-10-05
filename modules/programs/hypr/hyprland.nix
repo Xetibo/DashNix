@@ -6,12 +6,7 @@
   pkgs,
   ...
 }: let
-  browserName =
-    if (builtins.isString config.mods.homePackages.browser)
-    then config.mods.homePackages.browser
-    else if config.mods.homePackages.browser ? meta && config.mods.homePackages.browser.meta ? mainProgram
-    then config.mods.homePackages.browser.meta.mainProgram
-    else config.mods.homePackages.browser.pname;
+  defaultWmConf = import ../../../lib/wm.nix {inherit lib;};
 in {
   options.mods.hypr.hyprland = {
     enable = lib.mkOption {
@@ -22,64 +17,12 @@ in {
         Enable Hyprland
       '';
     };
-    defaultMonitor = lib.mkOption {
-      default = "";
-      example = "eDP-1";
-      type = lib.types.str;
-      description = ''
-        main monitor
-      '';
-    };
-    defaultMonitorMode = lib.mkOption {
-      default = "";
-      example = "3440x1440@180";
-      type = lib.types.str;
-      description = ''
-        main monitor mode: width x height @ refreshrate
-      '';
-    };
-    defaultMonitorScale = lib.mkOption {
-      default = "1";
-      example = "1.5";
-      type = lib.types.str;
-      description = ''
-        main monitor scaling
-      '';
-    };
-    monitor = lib.mkOption {
-      default = [
-        # main monitor
-        "${config.mods.hypr.hyprland.defaultMonitor},${config.mods.hypr.hyprland.defaultMonitorMode},0x0,${config.mods.hypr.hyprland.defaultMonitorScale}"
-        # all others
-      ];
-      example = ["DP-1,3440x1440@180,2560x0,1,vrr,0"];
-      type = with lib.types; listOf str;
-      description = ''
-        The monitor configuration for hyprland.
-      '';
-    };
-    workspace = lib.mkOption {
-      default = [];
-      example = ["2,monitor:DP-1, default:true"];
-      type = with lib.types; listOf str;
-      description = ''
-        The workspace configuration for hyprland.
-      '';
-    };
     noAtomic = lib.mkOption {
       default = false;
       example = true;
       type = lib.types.bool;
       description = ''
-        Use tearing
-      '';
-    };
-    extraAutostart = lib.mkOption {
-      default = [];
-      example = ["your application"];
-      type = lib.types.listOf lib.types.str;
-      description = ''
-        Extra exec_once.
+        Use tearing (Warning, can be buggy)
       '';
     };
     useIronbar = lib.mkOption {
@@ -88,14 +31,6 @@ in {
       type = lib.types.bool;
       description = ''
         Whether to use ironbar in hyprland.
-      '';
-    };
-    ironbarSingleMonitor = lib.mkOption {
-      default = true;
-      example = false;
-      type = lib.types.bool;
-      description = ''
-        Whether to use ironbar on a single monitor.
       '';
     };
     useDefaultConfig = lib.mkOption {
@@ -160,7 +95,151 @@ in {
         hyprpicker
       ];
 
-      wayland.windowManager.hyprland = {
+      wayland.windowManager.hyprland = let
+        mkWorkspace = workspaces:
+          builtins.map (workspace: let
+            default =
+              if workspace.default
+              then ",default:true"
+              else "";
+          in "${workspace.name},monitor:${workspace.monitor}${default}")
+          workspaces;
+        mkTransform = transform:
+          if transform == "0"
+          then 0
+          else if transform == "90"
+          then 1
+          else if transform == "180"
+          then 2
+          else if transform == "270"
+          then 3
+          else 4;
+        mkVrr = vrr:
+          if vrr
+          then "1"
+          else "0";
+        mkMonitors = monitors:
+          builtins.map (
+            monitor: "${monitor.name},${builtins.toString monitor.resolutionX}x${builtins.toString monitor.resolutionY}@${builtins.toString monitor.refreshrate},${builtins.toString monitor.positionX}x${builtins.toString monitor.positionY},${builtins.toString monitor.scale}, transform,${builtins.toString (mkTransform monitor.transform)}, vrr,${mkVrr monitor.vrr}"
+          )
+          monitors;
+
+        mkMods = bind: let
+          mods = bind.modKeys or [];
+        in
+          builtins.map (mod:
+            if mod == "Mod"
+            then (lib.strings.toUpper config.mods.wm.modKey) + " "
+            else lib.strings.toUpper mod)
+          mods
+          |> lib.strings.concatStringsSep "";
+        mkArgs = args:
+          if args != []
+          then (lib.strings.concatStringsSep " " args)
+          else "";
+        shouldRepeat = bind: bind ? meta && bind.meta ? hyprland && bind.meta.hyprland ? repeat && bind.meta.hyprland.repeat;
+
+        defaultBinds = cfg:
+          if cfg.mods.wm.useDefaultBinds
+          then defaultWmConf.defaultBinds cfg
+          else [];
+
+        mkEBinds = cfg: let
+          binds = cfg.mods.wm.binds ++ defaultBinds cfg;
+        in
+          binds
+          |> builtins.filter (bind: bind ? command && shouldRepeat bind && !hasInvalidCustomCommand bind)
+          |> builtins.map (
+            bind: "${mkMods bind},${bind.key},${mkCommand bind}"
+          );
+        mkBinds = cfg: let
+          binds = cfg.mods.wm.binds ++ defaultBinds cfg;
+        in
+          binds
+          |> builtins.filter (bind: bind ? command && !(shouldRepeat bind) && !hasInvalidCustomCommand bind)
+          |> builtins.map (
+            bind: "${mkMods bind},${bind.key},${mkCommand bind}"
+          );
+        mkCommand = bind: let
+          args = bind.args or [];
+        in
+          if bind.command == "quit"
+          then "exit"
+          else if bind.command == "killActive"
+          then "killactive"
+          else if bind.command == "moveWindowRight"
+          then "movewindow,r"
+          else if bind.command == "moveWindowDown"
+          then "movewindow,d"
+          else if bind.command == "moveWindowLeft"
+          then "movewindow,l"
+          else if bind.command == "moveWindowUp"
+          then "movewindow,u"
+          else if bind.command == "moveFocusUp"
+          then "movefocus,u"
+          else if bind.command == "moveFocusRight"
+          then "movefocus,r"
+          else if bind.command == "moveFocusDown"
+          then "movefocus,d"
+          else if bind.command == "moveFocusLeft"
+          then "movefocus,l"
+          else if bind.command == "toggleFloating"
+          then "togglefloating"
+          else if bind.command == "toggleFullscreen"
+          then "fullscreen"
+          else if bind.command == "focusWorkspace"
+          then "workspace" + "," + mkArgs args
+          else if bind.command == "moveToWorkspace"
+          then "movetoworkspace" + "," + mkArgs args
+          else if bind.command == "spawn"
+          then "exec" + "," + mkArgs args
+          else if bind.command == "spawn-sh"
+          then "exec" + "," + mkArgs args
+          else bind.command.hyprland + "," + mkArgs args;
+        hasInvalidCustomCommand = bind: !(builtins.isString bind.command) && bind.command.hyprland or null == null;
+
+        mkEnv = config: let
+          defaultEnv =
+            if config.mods.wm.useDefaultEnv
+            then defaultWmConf.defaultEnv config
+            else {
+              all = {};
+              hyprland = {};
+            };
+          userEnv =
+            if config.mods.wm.env ? all
+            then config.mods.wm.env.all // config.mods.wm.env.hyprland
+            else config.mods.wm.env;
+          env = userEnv // defaultEnv.all // defaultEnv.hyprland;
+        in
+          lib.attrsets.mapAttrsToList (
+            name: value: "${name},${value}"
+          )
+          env;
+        mkAutoStart = config: let
+          defaultStartup =
+            if config.mods.wm.useDefaultStartup
+            then defaultWmConf.defaultStartup config
+            else {
+              all = [];
+              hyprland = [];
+            };
+          userStartup =
+            if config.mods.wm.startup ? all
+            then config.mods.wm.startup.all ++ config.mods.wm.startup.hyprland
+            else config.mods.wm.startup;
+          autoStart = userStartup ++ defaultStartup.all ++ defaultStartup.hyprland;
+        in
+          autoStart;
+        mkWindowRule = config: let
+          defaultWindowRules =
+            if config.mods.wm.useDefaultWindowRules
+            then defaultWmConf.defaultWindowRules.hyprland
+            else [];
+        in
+          # defaultWindowRules ++ config.mods.wm.windowRules.hyprland;
+          defaultWindowRules;
+      in {
         enable = true;
         package = mkDashDefault pkgs.hyprland;
         plugins =
@@ -174,122 +253,11 @@ in {
             lib.mkMerge
             [
               {
-                "$mod" = mkDashDefault "SUPER";
+                "$mod" = mkDashDefault config.mods.wm.modKey;
 
                 bindm = [
                   "$mod, mouse:272, movewindow"
                   "$mod, mouse:273, resizeactive"
-                ];
-
-                bind = [
-                  # screenshots
-                  ''$mod SUPER,S,exec,grim -g "$(slurp)" - | wl-copy''
-                  ''$mod SUPERSHIFT,S,exec,grim -g "$(slurp)" - | satty -f -''
-
-                  # regular programs
-                  "$mod SUPER,F,exec,${browserName}"
-                  (lib.mkIf (
-                    browserName == "firefox" || browserName == "zen"
-                  ) "$mod SUPERSHIFT,F,exec,${browserName} -p special")
-                  "$mod SUPER,T,exec,kitty -1"
-                  "$mod SUPER,E,exec,nautilus -w"
-                  (lib.mkIf config.mods.yazi.enable "$mod SUPER,Y,exec, EDITOR='neovide --no-fork' kitty yazi")
-                  "$mod SUPER,N,exec,neovide"
-                  (lib.mkIf config.mods.anyrun.enable "$mod SUPER,R,exec,anyrun")
-                  (lib.mkIf config.mods.oxi.oxirun.enable "$mod SUPER,R,exec,oxirun")
-                  (lib.mkIf config.mods.oxi.oxidash.enable "$mod SUPER,M,exec,oxidash")
-                  (lib.mkIf config.mods.oxi.oxicalc.enable "$mod SUPER,G,exec,oxicalc")
-                  (lib.mkIf config.mods.oxi.oxishut.enable "$mod SUPER,D,exec,oxishut")
-                  (lib.mkIf config.mods.oxi.oxipaste.enable "$mod SUPER,A,exec,oxipaste")
-                  (lib.mkIf config.mods.oxi.hyprdock.enable "$mod SUPERSHIFT,P,exec,hyprdock --gui")
-                  (lib.mkIf config.mods.hypr.hyprlock.enable "$mod SUPERSHIFT,L,exec, playerctl -a pause & hyprlock & systemctl suspend")
-                  (lib.mkIf config.mods.hypr.hyprlock.enable "$mod SUPERSHIFT,K,exec, playerctl -a pause & hyprlock & systemctl hibernate")
-
-                  # media keys
-                  (lib.mkIf config.mods.scripts.audioControl ",XF86AudioMute,exec, audioControl mute")
-                  (lib.mkIf config.mods.scripts.audioControl ",XF86AudioLowerVolume,exec, audioControl sink -5%")
-                  (lib.mkIf config.mods.scripts.audioControl ",XF86AudioRaiseVolume,exec, audioControl sink +5%")
-                  ",XF86AudioPlay,exec, playerctl play-pause"
-                  ",XF86AudioNext,exec, playerctl next"
-                  ",XF86AudioPrev,exec, playerctl previous"
-                  (lib.mkIf config.mods.scripts.changeBrightness ",XF86MonBrightnessDown,exec, changeBrightness 10%-")
-                  (lib.mkIf config.mods.scripts.changeBrightness ",XF86MonBrightnessUp,exec, changeBrightness +10%")
-
-                  # hyprland keybinds
-                  # misc
-                  "$mod SUPER,V,togglefloating,"
-                  "$mod SUPER,B,fullscreen,"
-                  "$mod SUPER,C,togglesplit"
-                  "$mod SUPER,Q,killactive,"
-                  "$mod SUPERSHIFTALT,M,exit,"
-                  "$mod SUPERSHIFT,W,togglespecialworkspace"
-
-                  # move
-                  "$mod SUPER,left,movewindow,l"
-                  "$mod SUPER,right,movewindow,r"
-                  "$mod SUPER,up,movewindow,u"
-                  "$mod SUPER,down,movewindow,d"
-
-                  # workspaces
-                  "$mod SUPER,1,workspace,1"
-                  "$mod SUPER,2,workspace,2"
-                  "$mod SUPER,3,workspace,3"
-                  "$mod SUPER,4,workspace,4"
-                  "$mod SUPER,5,workspace,5"
-                  "$mod SUPER,6,workspace,6"
-                  "$mod SUPER,7,workspace,7"
-                  "$mod SUPER,8,workspace,8"
-                  "$mod SUPER,9,workspace,9"
-                  "$mod SUPER,0,workspace,10"
-
-                  # move to workspace
-                  "$mod SUPERSHIFT,1,movetoworkspace,1"
-                  "$mod SUPERSHIFT,2,movetoworkspace,2"
-                  "$mod SUPERSHIFT,3,movetoworkspace,3"
-                  "$mod SUPERSHIFT,4,movetoworkspace,4"
-                  "$mod SUPERSHIFT,5,movetoworkspace,5"
-                  "$mod SUPERSHIFT,6,movetoworkspace,6"
-                  "$mod SUPERSHIFT,7,movetoworkspace,7"
-                  "$mod SUPERSHIFT,8,movetoworkspace,8"
-                  "$mod SUPERSHIFT,9,movetoworkspace,9"
-                  "$mod SUPERSHIFT,0,movetoworkspace,10"
-
-                  # move to workspace silent
-                  "$mod SUPERSHIFTALT,1,movetoworkspacesilent,1"
-                  "$mod SUPERSHIFTALT,2,movetoworkspacesilent,2"
-                  "$mod SUPERSHIFTALT,3,movetoworkspacesilent,3"
-                  "$mod SUPERSHIFTALT,4,movetoworkspacesilent,4"
-                  "$mod SUPERSHIFTALT,5,movetoworkspacesilent,5"
-                  "$mod SUPERSHIFTALT,6,movetoworkspacesilent,6"
-                  "$mod SUPERSHIFTALT,7,movetoworkspacesilent,7"
-                  "$mod SUPERSHIFTALT,8,movetoworkspacesilent,8"
-                  "$mod SUPERSHIFTALT,9,movetoworkspacesilent,9"
-                  "$mod SUPERSHIFTALT,0,movetoworkspacesilent,10"
-
-                  # preselection
-                  "$mod SUPERALT,j,layoutmsg,preselect l"
-                  "$mod SUPERALT,k,layoutmsg,preselect d"
-                  "$mod SUPERALT,l,layoutmsg,preselect u"
-                  "$mod SUPERALT,semicolon,layoutmsg,preselect r"
-                  "$mod SUPERALT,h,layoutmsg,preselect n"
-                ];
-
-                binde = [
-                  # hyprland keybinds
-                  # focus
-                  "$mod SUPER,J,movefocus,l"
-                  "$mod SUPER,semicolon,movefocus,r"
-                  "$mod SUPER,L,movefocus,u"
-                  "$mod SUPER,K,movefocus,d"
-
-                  # resize
-                  "$mod SUPER,U,resizeactive,-20 0"
-                  "$mod SUPER,P,resizeactive,20 0"
-                  "$mod SUPER,O,resizeactive,0 -20"
-                  "$mod SUPER,I,resizeactive,0 20"
-
-                  (lib.mkIf config.mods.hypr.hyprland.hyprspaceEnable
-                    "SUPER, W, overview:toggle")
                 ];
 
                 general = {
@@ -364,70 +332,19 @@ in {
                   "3, horizontal, workspace"
                 ];
 
-                monitor = mkDashDefault config.mods.hypr.hyprland.monitor;
-                workspace = mkDashDefault config.mods.hypr.hyprland.workspace;
-
-                env = [
-                  "GTK_CSD,0"
-                  ''TERM,"kitty /bin/fish"''
-                  "XDG_CURRENT_DESKTOP=Hyprland"
-                  "XDG_SESSION_TYPE=wayland"
-                  "XDG_SESSION_DESKTOP=Hyprland"
-                  "HYPRCURSOR_THEME,${config.mods.stylix.cursor.name}"
-                  "HYPRCURSOR_SIZE,${toString config.mods.stylix.cursor.size}"
-                  "XCURSOR_THEME,${config.mods.stylix.cursor.name}"
-                  "XCURSOR_SIZE,${toString config.mods.stylix.cursor.size}"
-                  "QT_QPA_PLATFORM,wayland"
-                  "QT_QPA_PLATFORMTHEME,qt5ct"
-                  "QT_WAYLAND_FORCE_DPI,96"
-                  "QT_AUTO_SCREEN_SCALE_FACTOR,0"
-                  "QT_WAYLAND_DISABLE_WINDOWDECORATION,1"
-                  "QT_SCALE_FACTOR,1"
-                  ''EDITOR,"neovide --novsync --nofork"''
-
-                  (lib.mkIf config.mods.gpu.nvidia.enable "LIBVA_DRIVER_NAME,nvidia")
-                  (lib.mkIf config.mods.gpu.nvidia.enable "XDG_SESSION_TYPE,wayland")
-                  (lib.mkIf config.mods.gpu.nvidia.enable "GBM_BACKEND,nvidia-drm")
-                  (lib.mkIf config.mods.gpu.nvidia.enable "__GLX_VENDOR_LIBRARY_NAME,nvidia")
-                ];
-
                 layerrule = [
                   # layer rules
                   # mainly to disable animations within slurp and grim
                   "noanim, selection"
                 ];
 
-                windowrule = [
-                  # window rules
-                  "float,class:^(.*)(OxiCalc)(.*)$"
-                  "float,class:^(.*)(winecfg.exe)(.*)$"
-                  "float,class:^(.*)(copyq)(.*)$"
-                  "center,class:^(.*)(swappy)(.*)$"
-                  "workspace 10 silent,class:^(.*)(steam)(.*)$"
-
-                  # Otherwise neovide will ignore tiling
-                  "suppressevent fullscreen maximize,class:^(.*)(neovide)(.*)$"
-                ];
-
-                exec-once =
-                  [
-                    # environment
-                    "systemctl --user import-environment"
-                    "dbus-update-activation-environment --systemd --all"
-                    "hyprctl setcursor ${config.mods.stylix.cursor.name} ${toString config.mods.stylix.cursor.size}"
-                    # ensures the systemd service knows what "hyprctl" is :)
-                    (lib.mkIf config.mods.gaming.gamemode "systemctl try-restart gamemoded.service --user")
-
-                    # other programs
-                    "${browserName}"
-                    (lib.mkIf config.mods.oxi.hyprdock.enable "hyprdock --server")
-                    (lib.mkIf config.mods.hypr.hyprpaper.enable "hyprpaper")
-                    (lib.mkIf config.mods.hypr.hyprland.useIronbar "ironbar")
-                    (lib.mkIf config.mods.oxi.oxipaste.enable "oxipaste_daemon")
-                    (lib.mkIf config.mods.oxi.oxinoti.enable "oxinoti")
-                  ]
-                  ++ config.mods.hypr.hyprland.extraAutostart;
-
+                workspace = mkDashDefault (mkWorkspace config.mods.wm.workspaces);
+                monitor = mkDashDefault (mkMonitors config.mods.wm.monitors);
+                env = mkDashDefault (mkEnv config);
+                bind = mkDashDefault (mkBinds config);
+                binde = mkDashDefault (mkEBinds config);
+                windowrule = mkDashDefault (mkWindowRule config);
+                exec-once = mkDashDefault (mkAutoStart config);
                 plugin = config.mods.hypr.hyprland.pluginConfig;
               }
               config.mods.hypr.hyprland.customConfig

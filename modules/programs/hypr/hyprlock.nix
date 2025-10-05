@@ -24,14 +24,22 @@
 
         input-field = [
           {
-            monitor = "${config.mods.hypr.hyprland.defaultMonitor}";
+            monitor = "${
+              if config.mods.wm.monitors != []
+              then (builtins.elemAt config.mods.wm.monitors 0).name
+              else ""
+            }";
             placeholder_text = "password or something";
           }
         ];
 
         label = [
           {
-            monitor = "${config.mods.hypr.hyprland.defaultMonitor}";
+            monitor = "${
+              if config.mods.wm.monitors != []
+              then (builtins.elemAt config.mods.wm.monitors 0).name
+              else ""
+            }";
             text = "$TIME";
             font_size = 50;
             position = "0, 200";

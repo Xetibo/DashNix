@@ -1,5 +1,6 @@
 {
   imports = [
+    ./niri.nix
     ./acpid.nix
     ./anyrun.nix
     ./basePackages.nix
@@ -48,6 +49,7 @@
     ./virtmanager.nix
     ./xkb.nix
     ./xone.nix
+    ./wm.nix
     ./yazi
   ];
 }
