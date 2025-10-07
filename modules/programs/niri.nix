@@ -353,6 +353,16 @@ in {
                 }
             }
 
+            ${
+              if config.mods.gpu.nvidia.enable
+              then ''
+                debug {
+                  wait-for-frame-completion-before-queueing
+                }
+              ''
+              else ''''
+            }
+
             // Autostart
 
             hotkey-overlay {
