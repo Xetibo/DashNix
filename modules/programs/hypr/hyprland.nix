@@ -161,7 +161,7 @@ in {
             bind: "${mkMods bind},${bind.key},${mkCommand bind}"
           );
         mkCommand = bind: let
-          inherit (bind) args;
+          args = bind.args or [];
         in
           if bind.command == "quit"
           then "exit"

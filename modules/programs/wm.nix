@@ -319,7 +319,7 @@ in {
     };
 
     windowRules = lib.mkOption {
-      default = [];
+      default = {};
       example = {
         niri = [
           ''
