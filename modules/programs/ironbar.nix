@@ -13,9 +13,14 @@
     end = [
       (lib.mkIf useBatteryModule
         {
-          type = "upower";
+          type = "battery";
           class = "battery";
           icon_size = 0;
+          format = "{percentage}%";
+          thresholds = {
+            warning = 20;
+            critical = 5;
+          };
         })
       {
         class = "music";
@@ -430,8 +435,8 @@ in {
                 color: @background;
               }
 
-              /* upower */
-              .upower {
+              /* battery */
+              .battery {
                 font-size: 13px;
                 padding: 0px 4px 0px 0px;
                 margin: 2px 0px 2px 0px;
@@ -439,21 +444,21 @@ in {
                 color: @primary;
               }
 
-              .upower .icon {
+              .battery .icon {
                 opacity: 0.0;
               }
 
-              .upower .label {
+              .battery .label {
                 margin: 2px 0px 0px -8px;
                 color: @primary;
               }
 
-              .upower:hover {
+              .battery:hover {
                 background-color: @secondary-background;
                 border-radius: 5px;
               }
 
-              .popup-upower {
+              .popup-battery {
                 background-color: @background;
                 color: @primary;
                 border-radius: 8px;
