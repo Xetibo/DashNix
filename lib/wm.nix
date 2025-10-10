@@ -1,4 +1,4 @@
-{lib, ...}: let
+let
   browserName = config:
     if (builtins.isString config.mods.homePackages.browser)
     then config.mods.homePackages.browser
@@ -247,8 +247,8 @@ in {
       else {}
     )
 
-    (mkBindWithDesc ["Mod"] "S" "spawn-sh" [''grim -g \"$(slurp)\" - | wl-copy''] "Take Screenshot")
-    (mkBindWithDesc ["Mod" "Shift"] "S" "spawn-sh" [''grim -g \"$(slurp)\" - | satty -f -''] "Take Screenshot and edit")
+    (mkBindWithDesc ["Mod"] "S" "spawn-sh" [''grim -g "$(slurp)" - | wl-copy''] "Take Screenshot")
+    (mkBindWithDesc ["Mod" "Shift"] "S" "spawn-sh" [''grim -g "$(slurp)" - | satty -f -''] "Take Screenshot and edit")
 
     (
       if config.mods.scripts.audioControl

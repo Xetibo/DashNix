@@ -44,8 +44,6 @@ in {
           qemu = {
             package = mkDashDefault pkgs.qemu_kvm;
             swtpm.enable = mkDashDefault true;
-            ovmf.enable = mkDashDefault true;
-            ovmf.packages = [pkgs.OVMFFull.fd];
           };
         };
         spiceUSBRedirection.enable = mkDashDefault true;

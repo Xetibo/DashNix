@@ -6,7 +6,7 @@
   pkgs,
   ...
 }: let
-  defaultWmConf = import ../../lib/wm.nix {inherit lib;};
+  defaultWmConf = import ../../lib/wm.nix;
 in {
   options.mods.niri = {
     enable = lib.mkOption {
@@ -66,7 +66,10 @@ in {
           |> lib.strings.concatStringsSep "";
         mkNiriArg = args:
           if args != []
-          then "\"${(lib.strings.concatStringsSep " " args)}\""
+          then let
+            concatCommand = lib.strings.concatStringsSep " " args;
+            validCommand = builtins.replaceStrings [''"''] [''\"''] concatCommand;
+          in "\"${validCommand}\""
           else "";
         mkNiriCommand = bind: let
           args = bind.args or [];

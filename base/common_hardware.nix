@@ -164,6 +164,8 @@ in {
         "vboxusers"
         "video"
         "audio"
+        "scanner"
+        "lp"
       ];
       packages = with pkgs; [
         home-manager

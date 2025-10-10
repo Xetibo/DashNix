@@ -6,7 +6,7 @@
   pkgs,
   ...
 }: let
-  defaultWmConf = import ../../../lib/wm.nix {inherit lib;};
+  defaultWmConf = import ../../../lib/wm.nix;
 in {
   options.mods.hypr.hyprland = {
     enable = lib.mkOption {
@@ -137,7 +137,7 @@ in {
           if args != []
           then (lib.strings.concatStringsSep " " args)
           else "";
-        shouldRepeat = bind: bind ? meta && bind.meta ? hyprland && bind.meta.hyprland ? repeat && bind.meta.hyprland.repeat;
+        shouldRepeat = bind: bind ? meta && bind.meta ? hyprland && bind.meta.hyprland ? repeat && bind.meta.hyprland.repeat == true;
 
         defaultBinds = cfg:
           if cfg.mods.wm.useDefaultBinds
@@ -148,7 +148,7 @@ in {
           binds = cfg.mods.wm.binds ++ defaultBinds cfg;
         in
           binds
-          |> builtins.filter (bind: bind ? command && shouldRepeat bind && !hasInvalidCustomCommand bind)
+          |> builtins.filter (bind: bind ? command && shouldRepeat bind && !(hasInvalidCustomCommand bind))
           |> builtins.map (
             bind: "${mkMods bind},${bind.key},${mkCommand bind}"
           );
@@ -156,7 +156,7 @@ in {
           binds = cfg.mods.wm.binds ++ defaultBinds cfg;
         in
           binds
-          |> builtins.filter (bind: bind ? command && !(shouldRepeat bind) && !hasInvalidCustomCommand bind)
+          |> builtins.filter (bind: bind ? command && !(shouldRepeat bind) && !(hasInvalidCustomCommand bind))
           |> builtins.map (
             bind: "${mkMods bind},${bind.key},${mkCommand bind}"
           );
@@ -338,13 +338,13 @@ in {
                   "noanim, selection"
                 ];
 
-                workspace = mkDashDefault (mkWorkspace config.mods.wm.workspaces);
-                monitor = mkDashDefault (mkMonitors config.mods.wm.monitors);
-                env = mkDashDefault (mkEnv config);
-                bind = mkDashDefault (mkBinds config);
-                binde = mkDashDefault (mkEBinds config);
-                windowrule = mkDashDefault (mkWindowRule config);
-                exec-once = mkDashDefault (mkAutoStart config);
+                workspace = mkWorkspace config.mods.wm.workspaces;
+                monitor = mkMonitors config.mods.wm.monitors;
+                env = mkEnv config;
+                bind = mkBinds config;
+                binde = mkEBinds config;
+                windowrule = mkWindowRule config;
+                exec-once = mkAutoStart config;
                 plugin = config.mods.hypr.hyprland.pluginConfig;
               }
               config.mods.hypr.hyprland.customConfig

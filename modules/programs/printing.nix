@@ -16,6 +16,10 @@
   config = lib.mkIf config.mods.printing.enable (
     lib.optionalAttrs (options ? services.printing) {
       # Enable CUPS to print documents.
+      environment.systemPackages = with pkgs; [
+        simple-scan
+      ];
+      hardware.sane.enable = true;
       services = {
         printing = {
           enable = true;
