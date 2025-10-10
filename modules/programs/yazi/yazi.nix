@@ -103,6 +103,11 @@
   keymap = {
     mgr.keymap = [
       {
+        on = "<Backspace>";
+        run = "backspace";
+        desc = "Delete the character before the cursor";
+      }
+      {
         on = ["<Esc>"];
         run = "escape";
         desc = "Exit visual mode clear selected or cancel search";
