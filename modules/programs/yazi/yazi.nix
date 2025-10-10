@@ -769,6 +769,11 @@
 
     input.keymap = [
       {
+        on = "<Backspace>";
+        run = "backspace";
+        desc = "Delete the character before the cursor";
+      }
+      {
         on = ["<C-q>"];
         run = "close";
         desc = "Cancel input";
