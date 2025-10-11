@@ -74,18 +74,50 @@
       type = lib.types.int;
       description = "Your gpu device.(Physical id of lshw)";
     };
+    scheduler = lib.mkOption {
+      default = "scx_rustland";
+      example = "scx_rusty";
+      type = with lib.types;
+        nullOr (enum [
+          "scx_bpfland"
+          "scx_chaos"
+          "scx_cosmos"
+          "scx_central"
+          "scx_flash"
+          "scx_flatcg"
+          "scx_lavd"
+          "scx_layered"
+          "scx_mitosis"
+          "scx_nest"
+          "scx_p2dq"
+          "scx_pair"
+          "scx_prev"
+          "scx_qmap"
+          "scx_rlfifo"
+          "scx_rustland"
+          "scx_rusty"
+          "scx_sdt"
+          "scx_simple"
+          "scx_tickless"
+          "scx_userland"
+          "scx_wd40"
+        ]);
+      description = "Scheduler to use, null disables this";
+    };
   };
   config = lib.mkIf config.mods.gaming.enable (
     lib.optionalAttrs (options ? environment.systemPackages) {
       environment.systemPackages = config.mods.gaming.tools;
       boot.kernelPackages = lib.mkForce pkgs.linuxPackages_cachyos;
-      services.scx.enable = true;
+      services.scx = lib.mkIf (config.mods.gaming.scheduler != null) {
+        enable = true;
+        inherit (config.mods.gaming) scheduler;
+      };
 
       programs = {
         steam.enable = mkDashDefault config.mods.gaming.steam;
         gamemode.enable = true;
         gamemode = {
-          enableRenice = mkDashDefault true;
           settings = {
             general = {
               desiredgov = mkDashDefault "performance";
