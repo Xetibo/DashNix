@@ -94,7 +94,7 @@
             zathura
             evince
             libreoffice-fresh
-            onlyoffice-bin
+            onlyoffice-desktopeditors
             pdftk
             pdfpc
             polylux2pdfpc

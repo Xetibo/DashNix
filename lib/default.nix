@@ -1,13 +1,35 @@
 {
   inputs,
-  lib,
   unstable,
   self,
-  stable,
   system,
+  permittedPackages,
   dashNixAdditionalProps ? {},
   ...
-}: {
+}: let
+  defaultConfig = {
+    config = {
+      allowUnfree = true;
+      permittedInsecurePackages = permittedPackages;
+    };
+    overlays = [
+      inputs.nur.overlays.default
+      inputs.chaoticNyx.overlays.cache-friendly
+    ];
+    inherit system;
+  };
+  mkPkgs = {
+    pkgs,
+    config,
+  }: let
+    overlays =
+      if (config ? overlays)
+      then config.overlays
+      else [];
+    comnbinedConfig = config // {overlays = overlays ++ defaultConfig.overlays;};
+  in
+    import pkgs comnbinedConfig;
+in {
   /*
   *
   # buildSystems
@@ -75,9 +97,27 @@
       ];
     },
     additionalInputs ? {},
+    unstableBundle ? {},
+    stableBundle ? {},
     overridePkgs ? false,
     ...
-  }:
+  }: let
+    unstableInput = unstableBundle.pkgs or inputs.unstable;
+    stableInput = stableBundle.pkgs or inputs.stable;
+    unstableConfig = unstableBundle.config or defaultConfig;
+    stableConfig = stableBundle.config or defaultConfig;
+
+    unstablePkgs = mkPkgs {
+      pkgs = unstableInput;
+      config = unstableConfig;
+    };
+    stablePkgs = mkPkgs {
+      pkgs = stableInput;
+      config = stableConfig;
+    };
+    inputlib = unstableInput.lib;
+    inherit (unstablePkgs) lib;
+  in
     builtins.listToAttrs (
       map
       (name: {
@@ -94,27 +134,28 @@
               additionalHomeConfig
               system
               root
-              stable
-              unstable
               additionalInputs
               dashNixAdditionalProps
+              lib
               ;
+            stable = stablePkgs;
+            unstable = unstablePkgs;
             pkgs = lib.mkForce (
               if overridePkgs
-              then stable
-              else unstable
+              then stablePkgs
+              else unstablePkgs
             );
             alternativePkgs =
               if overridePkgs
-              then unstable
-              else stable;
+              then unstablePkgs
+              else stablePkgs;
             hostName = name;
             homeMods = mods.home;
             additionalHomeMods = additionalMods.home;
             mkDashDefault = import ./override.nix {inherit lib;};
           };
         in
-          inputs.unstable.lib.nixosSystem {
+          inputlib.nixosSystem {
             modules =
               [
                 {_module.args = args;}
@@ -122,8 +163,8 @@
               ]
               ++ mods.nixos
               ++ additionalMods.nixos
-              ++ inputs.unstable.lib.optional (builtins.pathExists additionalNixosConfig) additionalNixosConfig
-              ++ inputs.unstable.lib.optional (builtins.pathExists mod) mod;
+              ++ lib.optional (builtins.pathExists additionalNixosConfig) additionalNixosConfig
+              ++ lib.optional (builtins.pathExists mod) mod;
           };
       })
       (

@@ -165,6 +165,37 @@ nixosConfigurations =
     inputs.dashNix.dashNixLib.buildSystems { root = ./.; inherit additionalInputs; };
 ```
 
+## Configuring pkgs
+
+While DashNix offers a default pkgs config, you may want to permit an unsecure packages or add an overlay to them.
+You can configure both stable and unstable pkgs the following way:
+
+```nix
+currentSystem = "x86_64-linux";
+permittedPackages = [
+  "some package"
+];
+config = {
+  system = currentSystem;
+  config = {
+    allowUnfree = true;
+    permittedInsecurePackages = permittedPackages;
+  };
+};
+unstableBundle = {
+  pkgs = inputs.unstable;
+  inherit config;
+};
+inputs.dashNix.dashNixLib.buildSystems {
+  root = ./.;
+  inherit unstableBundle;
+}
+```
+
+With this you could also change your input to something different should you wish to do so.
+Note that overriding inputs via the flake still works,
+this way however ensures you can also configure the inputs.
+
 ## Stable/Unstable
 
 Sometimes you want to differentiate between systems that are stable and unstable, e.g. for servers and desktops/laptops.

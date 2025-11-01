@@ -59,47 +59,27 @@
     currentSystem = "x86_64-linux";
     permittedPackages = [
       "olm-3.2.16"
-      # well done dotnet...
-      # this is just for omnisharp
-      "dotnet-core-combined"
-      "dotnet-wrapped-combined"
-      "dotnet-combined"
-      "dotnet-sdk-6.0.428"
-      "dotnet-sdk-wrapped-6.0.428"
-      "dotnet-sdk-6.0.136"
-      "dotnet-sdk-wrapped-6.0.136"
-      "dotnet-sdk-7.0.120"
-      "dotnet-sdk-wrapped-7.0.120"
-      "dotnet-sdk-7.0.410"
-      "dotnet-sdk-wrapped-7.0.410"
-      "jitsi-meet-1.0.8043"
-      "nextcloud-27.1.11"
     ];
-    stable = import ./lib/importPkgs.nix {
-      inherit inputs permittedPackages currentSystem;
-      pkgs = inputs.stable;
-    };
-    unstable = import ./lib/importPkgs.nix {
-      inherit inputs permittedPackages currentSystem;
-      pkgs = inputs.unstable;
-    };
-    pkgsDarkreader = import ./lib/importPkgs.nix {
-      inherit inputs permittedPackages currentSystem;
-      pkgs = inputs.pkgsDarkreader;
-    };
+    importPkgsFn = import ./lib/importPkgs.nix;
+    defaultConfigureFn = pkgs:
+      importPkgsFn {
+        inherit inputs currentSystem permittedPackages pkgs;
+      };
+    stable = defaultConfigureFn inputs.stable;
+    unstable = defaultConfigureFn inputs.unstable;
+    pkgsDarkreader = defaultConfigureFn inputs.pkgsDarkreader;
   in rec {
     dashNixLib = import ./lib {
       inherit
         self
         inputs
         unstable
-        stable
+        permittedPackages
         ;
       dashNixAdditionalProps = {
         inherit pkgsDarkreader;
       };
       system = currentSystem;
-      inherit (inputs.unstable) lib;
     };
     docs = import ./docs {
       inherit inputs;

@@ -102,11 +102,11 @@
             (lib.mkIf config.mods.homePackages.orcaSlicer orca-slicer)
             (lib.mkIf config.mods.homePackages.vesktop vesktop)
             (lib.mkIf config.mods.homePackages.nextcloudClient nextcloud-client)
-            (lib.mkIf (!isNull config.mods.homePackages.matrixClient) config.mods.homePackages.matrixClient)
-            (lib.mkIf (!isNull config.mods.homePackages.mailClient) config.mods.homePackages.mailClient)
+            (lib.mkIf (config.mods.homePackages.matrixClient != null) config.mods.homePackages.matrixClient)
+            (lib.mkIf (config.mods.homePackages.mailClient != null) config.mods.homePackages.mailClient)
             (lib.mkIf (
                 # NOTE: This should be package, but nix doesn't have that....
-                builtins.isAttrs config.mods.homePackages.browser && !isNull config.mods.homePackages.browser
+                builtins.isAttrs config.mods.homePackages.browser && config.mods.homePackages.browser != null
               )
               config.mods.homePackages.browser)
             adw-gtk3
@@ -128,10 +128,10 @@
             nh
             nix-index
             playerctl
-            poppler_utils
+            poppler-utils
             pulseaudio
             libsForQt5.qt5ct
-            qt6ct
+            qt6Packages.qt6ct
             fcp
             ripgrep
             rm-improved

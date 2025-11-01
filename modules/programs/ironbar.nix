@@ -4,6 +4,7 @@
   pkgs,
   inputs,
   options,
+  mkDashDefault,
   ...
 }: let
   inherit (config.conf) username;
@@ -263,8 +264,7 @@ in {
   config = lib.mkIf (config.mods.ironbar.enable || config.mods.hypr.hyprland.useIronbar) (
     lib.optionalAttrs (options ? programs.ironbar) {
       programs.ironbar = {
-        # TODO broken
-        # package = mkDashDefault pkgs.ironbar;
+        package = mkDashDefault pkgs.ironbar;
         enable = true;
         style =
           if config.mods.ironbar.useDefaultCss
