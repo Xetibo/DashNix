@@ -39,7 +39,7 @@
     filePickerPortal = lib.mkOption {
       default = "Term";
       example = "Gnome";
-      type = with lib.types; oneOf [(enum ["Gnome" "Kde" "Lxqt" "Gtk" "Term" "Default"]) string];
+      type = with lib.types; oneOf [(enum ["Gnome" "Kde" "Lxqt" "Gtk" "Term" "Default"]) str];
       description = ''
         The file picker portal to use (set with shana).
         Default removes the config, allowing you to set it yourself.

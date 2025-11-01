@@ -47,7 +47,7 @@
         } --config /etc/greetd/hyprgreet.conf";
         example = "${
           lib.getExe pkgs.cage
-        } -s -- ${lib.getExe pkgs.greetd.regreet}";
+        } -s -- ${lib.getExe pkgs.regreet}";
         type = lib.types.str;
         description = "The compositor/greeter command to run";
       };

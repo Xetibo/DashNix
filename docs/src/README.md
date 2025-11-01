@@ -220,7 +220,7 @@ E.g. stable/hosts/yourserver and unstable/hosts/yourdesktop
 
 # Installation
 
-You can find a custom ISO on my NextCloud server: [Link](https://cloud.dashie.org/s/z7G3zS9SXeEt2ERD).
+You can find a custom ISO in the releases: [Link](https://github.com/Xetibo/DashNix/releases).
 With this, you will receive the example config in /iso/example alongside the gnome desktop environment,
 as well as a few tools like gnome-disks, Neovim, Vscodium, a browser etc.
 
