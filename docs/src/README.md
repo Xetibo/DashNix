@@ -239,17 +239,17 @@ Then configure as you please and choose a command below depending on your disk i
 Installation via manual configuration:
 
 ```sh
-sudo nixos-install --flake <flakelocation>#<hostname> --root <mountpoint>
+sudo nixos-install --flake <flakelocation>#<hostname> --root <mountpoint> --option experimental-features "nix-command flakes pipe-operators"
 #example
-#nixos-install --flake ~/config#globi --root /mnt
+#nixos-install --flake ~/config#globi --root /mnt --option experimental-features "nix-command flakes pipe-operators"
 ```
 
 Installation via disko:
 
 ```sh
-sudo disko-install --flake <flakelocation>#<hostname> --disk <disk-name> <disk-device>
+sudo disko-install --flake <flakelocation>#<hostname> --disk <disk-name> <disk-device> --option experimental-features "nix-command flakes pipe-operators"
 #example
-#disko-install -- --flake ~/config#globi --disk main /dev/nvme0n1
+#disko-install -- --flake ~/config#globi --disk main /dev/nvme0n1 --option experimental-features "nix-command flakes pipe-operators"
 ```
 
 # Modules
