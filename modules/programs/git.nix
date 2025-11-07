@@ -50,9 +50,14 @@
   config = lib.optionalAttrs (options ? programs.git && options ? home.file) {
     programs.git = {
       enable = true;
-      userName = config.mods.git.username;
-      userEmail = config.mods.git.email;
-      extraConfig = config.mods.git.additionalConfig;
+      settings =
+        {
+          user = {
+            name = config.mods.git.username;
+            inherit (config.mods.git) email;
+          };
+        }
+        // config.mods.git.additionalConfig;
     };
     home.file.".ssh/config".text = config.mods.git.sshConfig;
   };
