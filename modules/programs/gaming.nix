@@ -19,7 +19,8 @@
         gamescope
         gamemode
         steam
-        lutris
+        # TODO broken
+        # lutris
         wineWowPackages.stable
         adwsteamgtk
         heroic
