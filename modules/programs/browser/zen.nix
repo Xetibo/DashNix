@@ -121,7 +121,7 @@ in {
     };
   };
   config = lib.mkIf (config.mods.browser.zen.enable || config.mods.homePackages.browser == "zen") (
-    lib.optionalAttrs (options ? home.packages) {
+    (lib.optionalAttrs (options ? home.packages) {
       programs.zen-browser = {
         enable = true;
         package =
@@ -149,7 +149,9 @@ in {
           };
         profiles = builtins.listToAttrs config.mods.browser.zen.profiles;
       };
+    })
+    // (lib.optionalAttrs (options ? stylix.targets.zen-browser) {
       stylix.targets.zen-browser.profileNames = lib.map (profile: profile.name) config.mods.browser.zen.profiles;
-    }
+    })
   );
 }
