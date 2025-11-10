@@ -74,7 +74,7 @@
         };
       };
     }
-    // lib.optionalAttrs (options ? services.logind) {
+    // lib.optionalAttrs (options ? services.logind && options ? services.logind.settings) {
       services.logind.settings.Login.HandleLidSwitchExternalPower = "ignore";
     }
   );
