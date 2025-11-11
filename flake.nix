@@ -21,7 +21,7 @@
 
     sops-nix.url = "github:Mic92/sops-nix";
 
-    hyprland.url = "git+https://github.com/hyprwm/Hyprland?submodules=1";
+    hyprland.url = "github:hyprwm/Hyprland";
 
     ironbar = {
       url = "github:JakeStanger/ironbar";

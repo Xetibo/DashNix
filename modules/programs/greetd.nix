@@ -5,6 +5,7 @@
   inputs,
   pkgs,
   options,
+  system,
   ...
 }: {
   options.mods = {
@@ -43,7 +44,7 @@
       };
       greeterCommand = lib.mkOption {
         default = "${
-          lib.getExe pkgs.hyprland
+          lib.getExe inputs.hyprland.packages.${system}.hyprland
         } --config /etc/greetd/hyprgreet.conf";
         example = "${
           lib.getExe pkgs.cage

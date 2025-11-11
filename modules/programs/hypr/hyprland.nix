@@ -241,7 +241,6 @@ in {
           defaultWindowRules;
       in {
         enable = true;
-        package = mkDashDefault pkgs.hyprland;
         plugins =
           [
             (lib.mkIf config.mods.hypr.hyprland.hyprspaceEnable pkgs.hyprlandPlugins.hyprspace)
