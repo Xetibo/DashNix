@@ -87,7 +87,6 @@
       if config.mods.basePackages.enable
       then
         {
-          preload.enable = mkDashDefault true;
           upower.enable = mkDashDefault true;
           dbus = {
             enable = mkDashDefault true;
