@@ -70,7 +70,7 @@ in {
               abbr --add cat 'bat'
               abbr --add find 'fd'
               abbr --add rm 'rip'
-              abbr --add cp 'fcp'
+              abbr --add cp 'cpz'
               abbr --add cd 'z'
               abbr --add y 'yazi'
 

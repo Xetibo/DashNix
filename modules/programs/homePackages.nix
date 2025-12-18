@@ -136,7 +136,7 @@
             pulseaudio
             libsForQt5.qt5ct
             qt6Packages.qt6ct
-            fcp
+            fuc
             ripgrep
             rm-improved
             system-config-printer
