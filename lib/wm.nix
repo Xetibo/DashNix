@@ -50,14 +50,11 @@ in {
     ];
     hyprland = [
       # window rules
-      "float,class:^(.*)(OxiCalc)(.*)$"
-      "float,class:^(.*)(winecfg.exe)(.*)$"
-      "float,class:^(.*)(copyq)(.*)$"
-      "center,class:^(.*)(swappy)(.*)$"
-      "workspace 10 silent,class:^(.*)(steam)(.*)$"
-
-      # Otherwise neovide will ignore tiling
-      "suppressevent fullscreen maximize,class:^(.*)(neovide)(.*)$"
+      "match:class OxiCalc, float on"
+      "match:class winecfg.exe, float on"
+      "match:class copyq, float on"
+      "match:class swappy, center on"
+      "match:class steam, workspace 10 silent"
     ];
   };
 

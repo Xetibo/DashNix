@@ -131,6 +131,7 @@
           misc {
               disable_splash_rendering = false
               disable_hyprland_logo = true
+              disable_xdg_env_checks = true
           }
 
           env=STATE_DIR,var/cache/regreet

@@ -34,10 +34,10 @@
       description = "Install gaming related packages";
     };
     kernel = lib.mkOption {
-      default = true;
-      example = false;
+      default = false;
+      example = true;
       type = lib.types.bool;
-      description = "Whether to use the CachyOS kernel";
+      description = "Whether to use the CachyOS kernel. WARNING: This is a manual compiled kernel!";
     };
     steam = lib.mkOption {
       default = true;
@@ -109,7 +109,7 @@
   config = lib.mkIf config.mods.gaming.enable (
     lib.optionalAttrs (options ? environment.systemPackages) {
       environment.systemPackages = config.mods.gaming.tools;
-      boot.kernelPackages = lib.mkForce pkgs.linuxPackages_cachyos;
+      boot.kernelPackages = lib.mkForce pkgs.cachyosKernels.linuxPackages-cachyos-latest;
       services.scx = lib.mkIf (config.mods.gaming.scheduler != null) {
         enable = true;
         inherit (config.mods.gaming) scheduler;

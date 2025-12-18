@@ -13,8 +13,8 @@
       permittedInsecurePackages = permittedPackages;
     };
     overlays = [
+      inputs.cachy.overlays.default
       inputs.nur.overlays.default
-      inputs.chaoticNyx.overlays.cache-friendly
     ];
     inherit system;
   };
@@ -76,7 +76,6 @@ in {
         ../base
         ../home
         ../modules
-        inputs.chaoticNyx.nixosModules.default
       ];
       home = [
         inputs.anyrun.homeManagerModules.default
@@ -92,7 +91,6 @@ in {
         inputs.reset.homeManagerModules.default
         inputs.sops-nix.homeManagerModules.sops
         inputs.dashvim.homeManagerModules.dashvim
-        inputs.chaoticNyx.homeManagerModules.default
         ../modules
       ];
     },

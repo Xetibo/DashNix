@@ -18,6 +18,7 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "unstable";
     };
+    cachy.url = "github:xddxdd/nix-cachyos-kernel?rev=bb7b8aa687464f24dcd452354d9621331d6b0737";
 
     sops-nix.url = "github:Mic92/sops-nix";
 
@@ -48,9 +49,6 @@
     reset-plugins.url = "github:Xetibo/ReSet-Plugins";
 
     superfreq.url = "github:NotAShelf/superfreq";
-
-    # absolute insanity
-    chaoticNyx.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
 
     compose.url = "github:garnix-io/nixos-compose";
   };

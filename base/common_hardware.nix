@@ -101,10 +101,6 @@ in {
 
       builders-use-substitutes = mkDashDefault true;
 
-      substituters = [
-        "https://chaotic-nyx.cachix.org/"
-      ];
-
       trusted-substituters = [
         "https://hyprland.cachix.org"
         "https://anyrun.cachix.org"
@@ -128,7 +124,6 @@ in {
         "oxicalc.cachix.org-1:qF3krFc20tgSmtR/kt6Ku/T5QiG824z79qU5eRCSBTQ="
         "hyprdock.cachix.org-1:HaROK3fBvFWIMHZau3Vq1TLwUoJE8yRbGLk0lEGzv3Y="
         "reset.cachix.org-1:LfpnUUdG7QM/eOkN7NtA+3+4Ar/UBeYB+3WH+GjP9Xo="
-        "chaotic-nyx.cachix.org-1:HfnXSw4pj95iI/n17rIDy40agHj12WfF+Gqk6SonIT8="
         "dashvim.cachix.org-1:uLRdxp1WOWHnsZZtu3SwUWZRsvC7SXo0Gyk3tIefuL0="
       ];
 

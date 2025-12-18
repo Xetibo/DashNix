@@ -12,6 +12,6 @@ import pkgs {
   };
   overlays = [
     inputs.nur.overlays.default
-    inputs.chaoticNyx.overlays.cache-friendly
+    inputs.cachy.overlays.default
   ];
 }

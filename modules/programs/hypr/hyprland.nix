@@ -310,6 +310,7 @@ in {
                   enable_swallow = mkDashDefault true;
                   disable_splash_rendering = mkDashDefault true;
                   disable_hyprland_logo = mkDashDefault true;
+                  disable_xdg_env_checks = mkDashDefault true;
                   swallow_regex = mkDashDefault "^(.*)(kitty)(.*)$";
                   initial_workspace_tracking = mkDashDefault 1;
                   # just doesn't work
@@ -334,7 +335,7 @@ in {
                 layerrule = [
                   # layer rules
                   # mainly to disable animations within slurp and grim
-                  "noanim, selection"
+                  "match:namespace selection, no_anim on"
                 ];
 
                 workspace = mkWorkspace config.mods.wm.workspaces;
