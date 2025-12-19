@@ -29,7 +29,160 @@
     comnbinedConfig = config // {overlays = overlays ++ defaultConfig.overlays;};
   in
     import pkgs comnbinedConfig;
-in {
+in rec {
+  mkNixos = {
+    root,
+    inputLib,
+    lib,
+    stablePkgs,
+    unstablePkgs,
+    stableMods,
+    unstableMods,
+    overridePkgs,
+    ...
+  }:
+    builtins.listToAttrs (
+      map
+      (name: {
+        inherit name;
+        value = let
+          mod = root + /hosts/${name}/configuration.nix;
+          additionalNixosConfig = root + /hosts/${name}/hardware.nix;
+          additionalHomeConfig = root + /hosts/${name}/home.nix;
+          args = {
+            inherit
+              self
+              inputs
+              mod
+              additionalHomeConfig
+              system
+              root
+              dashNixAdditionalProps
+              lib
+              ;
+            stable = stablePkgs;
+            unstable = unstablePkgs;
+            pkgs = lib.mkForce (
+              if overridePkgs
+              then stablePkgs
+              else unstablePkgs
+            );
+            alternativePkgs =
+              if overridePkgs
+              then unstablePkgs
+              else stablePkgs;
+            hostName = name;
+            homeMods =
+              if overridePkgs
+              then unstableMods.home
+              else stableMods.home;
+            mkDashDefault = import ./override.nix {inherit lib;};
+          };
+          nixosMods =
+            if overridePkgs
+            then unstableMods.nixos
+            else stableMods.nixos;
+        in
+          inputLib.nixosSystem {
+            modules =
+              [
+                {_module.args = args;}
+                mod
+              ]
+              ++ nixosMods
+              ++ lib.optional (builtins.pathExists additionalNixosConfig) additionalNixosConfig
+              ++ lib.optional (builtins.pathExists mod) mod;
+          };
+      })
+      (
+        lib.lists.remove "" (
+          lib.attrsets.mapAttrsToList (name: fType:
+            if fType == "directory"
+            then name
+            else "") (
+            builtins.readDir (root + /hosts)
+          )
+        )
+      )
+    );
+
+  mkHome = {
+    root,
+    lib,
+    stablePkgs,
+    unstablePkgs,
+    stableMods,
+    unstableMods,
+    overridePkgs,
+    ...
+  }:
+    builtins.listToAttrs (
+      map
+      (name: {
+        inherit name;
+        value = let
+          mod = root + /homes/${name}/configuration.nix;
+          additionalHomeConfig = root + /homes/${name}/home.nix;
+          args = {
+            inherit
+              self
+              inputs
+              mod
+              additionalHomeConfig
+              system
+              root
+              dashNixAdditionalProps
+              lib
+              ;
+            stable = stablePkgs;
+            unstable = unstablePkgs;
+            pkgs = lib.mkForce (
+              if overridePkgs
+              then stablePkgs
+              else unstablePkgs
+            );
+            alternativePkgs =
+              if overridePkgs
+              then unstablePkgs
+              else stablePkgs;
+            userName = name;
+            mkDashDefault = import ./override.nix {inherit lib;};
+          };
+          homeMods =
+            if overridePkgs
+            then unstableMods.home
+            else stableMods.home;
+        in
+          inputs.home-manager.lib.homeManagerConfiguration
+          {
+            inherit (args) pkgs;
+            modules =
+              [
+                {_module.args = args;}
+                mod
+              ]
+              ++ homeMods
+              ++ [
+                ../home/common.nix
+                ../home/themes
+                ../home/sync.nix
+                ./foxwrappers.nix
+              ]
+              ++ lib.optional (builtins.pathExists mod) mod;
+          };
+      })
+      (
+        lib.lists.remove "" (
+          lib.attrsets.mapAttrsToList (name: fType:
+            if fType == "directory"
+            then name
+            else "") (
+            builtins.readDir (root + /homes)
+          )
+        )
+      )
+    );
+
   /*
   *
   # buildSystems
@@ -58,7 +211,7 @@ in {
   #   );
 
   # in
-  buildSystems = {
+  buildFunc = func: {
     root,
     unstableBundle ? {},
     stableBundle ? {},
@@ -118,73 +271,15 @@ in {
       pkgs = stableInput;
       config = stableConfig;
     };
-    inputlib = unstableInput.lib;
+    inputLib = unstableInput.lib;
     inherit (unstablePkgs) lib;
   in
-    builtins.listToAttrs (
-      map
-      (name: {
-        inherit name;
-        value = let
-          mod = root + /hosts/${name}/configuration.nix;
-          additionalNixosConfig = root + /hosts/${name}/hardware.nix;
-          additionalHomeConfig = root + /hosts/${name}/home.nix;
-          args = {
-            inherit
-              self
-              inputs
-              mod
-              additionalHomeConfig
-              system
-              root
-              dashNixAdditionalProps
-              lib
-              ;
-            stable = stablePkgs;
-            unstable = unstablePkgs;
-            pkgs = lib.mkForce (
-              if overridePkgs
-              then stablePkgs
-              else unstablePkgs
-            );
-            alternativePkgs =
-              if overridePkgs
-              then unstablePkgs
-              else stablePkgs;
-            hostName = name;
-            homeMods =
-              if overridePkgs
-              then unstableMods.home
-              else stableMods.home;
-            mkDashDefault = import ./override.nix {inherit lib;};
-          };
-          nixosMods =
-            if overridePkgs
-            then unstableMods.nixos
-            else stableMods.nixos;
-        in
-          inputlib.nixosSystem {
-            modules =
-              [
-                {_module.args = args;}
-                mod
-              ]
-              ++ nixosMods
-              ++ lib.optional (builtins.pathExists additionalNixosConfig) additionalNixosConfig
-              ++ lib.optional (builtins.pathExists mod) mod;
-          };
-      })
-      (
-        lib.lists.remove "" (
-          lib.attrsets.mapAttrsToList (name: fType:
-            if fType == "directory"
-            then name
-            else "") (
-            builtins.readDir (root + /hosts)
-          )
-        )
-      )
-    );
+    func {
+      inherit lib inputLib stablePkgs unstablePkgs stableMods unstableMods stableInputs unstableInputs root overridePkgs;
+    };
+
+  buildSystems = buildFunc mkNixos;
+  buildHome = buildFunc mkHome;
 
   buildIso = inputs.unstable.lib.nixosSystem {
     specialArgs = {
