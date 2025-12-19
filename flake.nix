@@ -94,5 +94,20 @@
     modules = ./modules;
     iso = dashNixLib.buildIso.config.system.build.isoImage;
     nixosConfigurations = dashNixLib.buildSystems {root = ./example/.;};
+
+    mkFlake = stablePkgs.writeShellApplication {
+      name = "Create example config";
+      text =
+        /*
+        bash
+        */
+        ''
+          mkdir -p ~/gits/nixos
+          mkdir -p ~/gits/backup_nixos
+
+          mv ~/gits/nixos/* ~/gits/backup_nixos/
+          cp -r ${./example}/* ~/gits/nixos/
+        '';
+    };
   };
 }

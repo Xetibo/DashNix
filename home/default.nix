@@ -1,8 +1,5 @@
 {
   mkDashDefault,
-  additionalHomeConfig,
-  additionalHomeMods,
-  additionalInputs,
   dashNixAdditionalProps,
   config,
   homeMods,
@@ -42,7 +39,6 @@
       inherit
         inputs
         root
-        additionalInputs
         alternativePkgs
         system
         stable
@@ -62,9 +58,7 @@
           ../lib/foxwrappers.nix
         ]
         ++ homeMods
-        ++ additionalHomeMods
-        ++ lib.optional (builtins.pathExists mod) mod
-        ++ lib.optional (builtins.pathExists additionalHomeConfig) additionalHomeConfig;
+        ++ lib.optional (builtins.pathExists mod) mod;
     };
   };
 }

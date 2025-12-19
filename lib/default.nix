@@ -60,50 +60,55 @@ in {
   # in
   buildSystems = {
     root,
-    additionalMods ? {
-      nixos = [];
-      home = [];
-    },
-    mods ? {
-      nixos = [
-        inputs.lanzaboote.nixosModules.lanzaboote
-        inputs.nixos-wsl.nixosModules.default
-        inputs.home-manager.nixosModules.home-manager
-        inputs.stylix.nixosModules.stylix
-        inputs.disko.nixosModules.disko
-        inputs.superfreq.nixosModules.default
-        inputs.sops-nix.nixosModules.sops
-        ../base
-        ../home
-        ../modules
-      ];
-      home = [
-        inputs.anyrun.homeManagerModules.default
-        inputs.ironbar.homeManagerModules.default
-        inputs.oxicalc.homeManagerModules.default
-        inputs.oxishut.homeManagerModules.default
-        inputs.oxinoti.homeManagerModules.default
-        inputs.oxidash.homeManagerModules.default
-        inputs.oxipaste.homeManagerModules.default
-        inputs.oxirun.homeManagerModules.default
-        inputs.hyprdock.homeManagerModules.default
-        inputs.hyprland.homeManagerModules.default
-        inputs.reset.homeManagerModules.default
-        inputs.sops-nix.homeManagerModules.sops
-        inputs.dashvim.homeManagerModules.dashvim
-        ../modules
-      ];
-    },
-    additionalInputs ? {},
     unstableBundle ? {},
     stableBundle ? {},
     overridePkgs ? false,
     ...
   }: let
+    defaultNixosMods = inputs: [
+      inputs.lanzaboote.nixosModules.lanzaboote
+      inputs.nixos-wsl.nixosModules.default
+      inputs.home-manager.nixosModules.home-manager
+      inputs.stylix.nixosModules.stylix
+      inputs.disko.nixosModules.disko
+      inputs.superfreq.nixosModules.default
+      inputs.sops-nix.nixosModules.sops
+      ../base
+      ../home
+      ../modules
+    ];
+
+    defaultHomeMods = inputs: [
+      inputs.anyrun.homeManagerModules.default
+      inputs.ironbar.homeManagerModules.default
+      inputs.oxicalc.homeManagerModules.default
+      inputs.oxishut.homeManagerModules.default
+      inputs.oxinoti.homeManagerModules.default
+      inputs.oxidash.homeManagerModules.default
+      inputs.oxipaste.homeManagerModules.default
+      inputs.oxirun.homeManagerModules.default
+      inputs.hyprdock.homeManagerModules.default
+      inputs.hyprland.homeManagerModules.default
+      inputs.reset.homeManagerModules.default
+      inputs.sops-nix.homeManagerModules.sops
+      inputs.dashvim.homeManagerModules.dashvim
+      ../modules
+    ];
+
     unstableInput = unstableBundle.pkgs or inputs.unstable;
     stableInput = stableBundle.pkgs or inputs.stable;
     unstableConfig = unstableBundle.config or defaultConfig;
     stableConfig = stableBundle.config or defaultConfig;
+    unstableInputs = (unstableBundle.inputs or {}) // inputs;
+    stableInputs = (stableBundle.inputs or {}) // inputs;
+    unstableMods = {
+      home = (defaultHomeMods unstableInputs) ++ (unstableBundle.mods.home or []);
+      nixos = (defaultNixosMods unstableInputs) ++ (unstableBundle.mods.nixos or []);
+    };
+    stableMods = {
+      home = (defaultHomeMods stableInputs) ++ (stableBundle.mods.home or []);
+      nixos = (defaultNixosMods stableInputs) ++ (stableBundle.mods.nixos or []);
+    };
 
     unstablePkgs = mkPkgs {
       pkgs = unstableInput;
@@ -132,7 +137,6 @@ in {
               additionalHomeConfig
               system
               root
-              additionalInputs
               dashNixAdditionalProps
               lib
               ;
@@ -148,10 +152,16 @@ in {
               then unstablePkgs
               else stablePkgs;
             hostName = name;
-            homeMods = mods.home;
-            additionalHomeMods = additionalMods.home;
+            homeMods =
+              if overridePkgs
+              then unstableMods.home
+              else stableMods.home;
             mkDashDefault = import ./override.nix {inherit lib;};
           };
+          nixosMods =
+            if overridePkgs
+            then unstableMods.nixos
+            else stableMods.nixos;
         in
           inputlib.nixosSystem {
             modules =
@@ -159,8 +169,7 @@ in {
                 {_module.args = args;}
                 mod
               ]
-              ++ mods.nixos
-              ++ additionalMods.nixos
+              ++ nixosMods
               ++ lib.optional (builtins.pathExists additionalNixosConfig) additionalNixosConfig
               ++ lib.optional (builtins.pathExists mod) mod;
           };

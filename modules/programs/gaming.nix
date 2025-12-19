@@ -37,7 +37,11 @@
       default = false;
       example = true;
       type = lib.types.bool;
-      description = "Whether to use the CachyOS kernel. WARNING: This is a manual compiled kernel!";
+      description = ''
+        Whether to use the CachyOS kernel.
+        WARNING: This is a manual compiled kernel!
+        (Please also ensure you use your own input hash for the source as the compilation can often fail due to temporary broken changes.)
+      '';
     };
     steam = lib.mkOption {
       default = true;

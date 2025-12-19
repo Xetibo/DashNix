@@ -23,6 +23,40 @@ dashNix = {
 
 You can then configure your systems in your flake outputs with a provided library command:
 
+Please note that overriding inputs will invalidate the cache configuration, this means you will have to add this manually:
+
+```nix
+  builders-use-substitutes = true;
+
+  extra-substituters = [
+    "https://hyprland.cachix.org"
+    "https://anyrun.cachix.org"
+    "https://cache.garnix.io"
+    "https://oxipaste.cachix.org"
+    "https://oxinoti.cachix.org"
+    "https://oxishut.cachix.org"
+    "https://oxidash.cachix.org"
+    "https://oxicalc.cachix.org"
+    "https://hyprdock.cachix.org"
+    "https://reset.cachix.org"
+    "https://dashvim.cachix.org"
+  ];
+
+  extra-trusted-public-keys = [
+    "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
+    "anyrun.cachix.org-1:pqBobmOjI7nKlsUMV25u9QHa9btJK65/C8vnO3p346s="
+    "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
+    "oxipaste.cachix.org-1:n/oA3N3Z+LJP7eIWOwuoLd9QnPyZXqFjLgkahjsdDGc="
+    "oxinoti.cachix.org-1:dvSoJl2Pjo5HMaNngdBbSaixK9BSf2N8gzjP2MdGvfc="
+    "oxishut.cachix.org-1:axyAGF3XMh1IyMAW4UMbQCdMNovDH0KH6hqLLRJH8jU="
+    "oxidash.cachix.org-1:5K2FNHp7AS8VF7LmQkJAUG/dm6UHCz4ngshBVbjFX30="
+    "oxicalc.cachix.org-1:qF3krFc20tgSmtR/kt6Ku/T5QiG824z79qU5eRCSBTQ="
+    "hyprdock.cachix.org-1:HaROK3fBvFWIMHZau3Vq1TLwUoJE8yRbGLk0lEGzv3Y="
+    "reset.cachix.org-1:LfpnUUdG7QM/eOkN7NtA+3+4Ar/UBeYB+3WH+GjP9Xo="
+    "dashvim.cachix.org-1:uLRdxp1WOWHnsZZtu3SwUWZRsvC7SXo0Gyk3tIefuL0="
+  ];
+```
+
 ```nix
 nixosConfigurations = inputs.dashNix.dashNixLib.buildSystems { root = ./.; };
 ```
@@ -96,29 +130,29 @@ Here is a minimal required configuration.nix (the TODOs mention a required chang
     # sddm = { };
     # gdm = { };
     drives = {
-        # default assumes ROOT, BOOT, HOME and SWAP labaled drives exist
-        # for an example without HOME see below
-        # defaultDrives.enable = false;
-        # extraDrives = [
-        #   {
-        #     name = "boot";
-        #     drive = {
-        #       device = "/dev/disk/by-label/BOOT";
-        #       fsType = "vfat";
-        #       options = [ "rw" "fmask=0022" "dmask=0022" "noatime" ];
-        #     };
-        #   }
-        #   {
-        #     name = "";
-        #     drive = {
-        #       device = "/dev/disk/by-label/ROOT";
-        #       fsType = "ext4";
-        #       options = [ "noatime" "nodiratime" "discard" ];
-        #     };
-        #   }
-        # ];
-        # You can also use disko to format your disks on installation.
-        # Please refer to the Documentation about the drives module for an example.
+      # default assumes ROOT, BOOT, HOME and SWAP labaled drives exist
+      # for an example without HOME see below
+      # defaultDrives.enable = false;
+      # extraDrives = [
+      #   {
+      #     name = "boot";
+      #     drive = {
+      #       device = "/dev/disk/by-label/BOOT";
+      #       fsType = "vfat";
+      #       options = [ "rw" "fmask=0022" "dmask=0022" "noatime" ];
+      #     };
+      #   }
+      #   {
+      #     name = "";
+      #     drive = {
+      #       device = "/dev/disk/by-label/ROOT";
+      #       fsType = "ext4";
+      #       options = [ "noatime" "nodiratime" "discard" ];
+      #     };
+      #   }
+      # ];
+      # You can also use disko to format your disks on installation.
+      # Please refer to the Documentation about the drives module for an example.
     };
   };
 }
@@ -128,47 +162,13 @@ Here is a minimal required configuration.nix (the TODOs mention a required chang
 
 After logging in the first time, your password will be set to "firstlogin", please change this to whatever you like.
 
-## Nixos and Home-manager Modules
-
-You can add additional modules or remove all of them by overriding parameters to the buildSystems command:
-
-```nix
-nixosConfigurations =
-    let
-        additionalMods = {
-            nixos = [
-            # your modules
-            ]; home = [
-            # your modules
-            ];
-        }
-        # passing this parameter will override the existing modules
-        mods = {
-            nixos = [];
-            home = [];
-        }
-    in
-    inputs.dashNix.dashNixLib.buildSystems { root = ./.; inherit mods additionalMods; };
-```
-
-## Additional Inputs
-
-Just like modules, you can add additional inputs to your configuration.
-
-```nix
-nixosConfigurations =
-    let
-        additionalInputs = {
-            something.url = "yoururl"
-        }
-    in
-    inputs.dashNix.dashNixLib.buildSystems { root = ./.; inherit additionalInputs; };
-```
-
 ## Configuring pkgs
 
-While DashNix offers a default pkgs config, you may want to permit an unsecure packages or add an overlay to them.
+While DashNix offers a default pkgs config, you may want to permit an unsecure packages,
+add additional modules/inputs, or add an overlay to them.
 You can configure both stable and unstable pkgs the following way:
+
+Please note that modules and inputs are merged together to ensure functionality.
 
 ```nix
 currentSystem = "x86_64-linux";
@@ -181,10 +181,21 @@ config = {
     allowUnfree = true;
     permittedInsecurePackages = permittedPackages;
   };
+  inputs = {
+    # Some inputs
+  }
+  mods = {
+    home = [
+      # Some home manager module
+    ];
+    nixos = [
+      # Some nixos module
+    ];
+}
 };
 unstableBundle = {
   pkgs = inputs.unstable;
-  inherit config;
+  inherit config mods;
 };
 inputs.dashNix.dashNixLib.buildSystems {
   root = ./.;
@@ -201,24 +212,26 @@ this way however ensures you can also configure the inputs.
 Sometimes you want to differentiate between systems that are stable and unstable, e.g. for servers and desktops/laptops.
 This can be done with the overridePkgs flag for the lib function:
 
+(overridePkgs simply inverts the default bundle that is used for the nix standard library as well as NixOS itself)
+
 ```nix
- nixosConfigurations =
-   inputs.dashNix.dashNixLib.buildSystems {
-     root = ./stable;
-     inherit additionalInputs;
-     overridePkgs = true;
-   }
-   // inputs.dashNix.dashNixLib.buildSystems {
-     root = ./unstable;
-     inherit additionalInputs;
-   };
+nixosConfigurations =
+  inputs.dashNix.dashNixLib.buildSystems {
+    root = ./stable;
+    inherit stableBundle;
+    overridePkgs = true;
+  }
+  // inputs.dashNix.dashNixLib.buildSystems {
+    inherit unstableBundle;
+    root = ./unstable;
+  };
 ```
 
 You can now place your systems in the respective directories.
 Keep in mind that the hosts directory will still need to exist in each variant.
 E.g. stable/hosts/yourserver and unstable/hosts/yourdesktop
 
-# Installation
+# Installation via ISO
 
 You can find a custom ISO in the releases: [Link](https://github.com/Xetibo/DashNix/releases).
 With this, you will receive the example config in /iso/example alongside the gnome desktop environment,
@@ -251,6 +264,17 @@ sudo disko-install --flake <flakelocation>#<hostname> --disk <disk-name> <disk-d
 #example
 #disko-install -- --flake ~/config#globi --disk main /dev/nvme0n1 --option experimental-features "nix-command flakes pipe-operators"
 ```
+
+# Installation via flake
+
+If you already have nix installed, you can instead just copy the default config onto your system and install DashNix with it.
+To create the example config for a base to start with, you can just run this flake with the mkFlake command:
+
+```sh
+nix run github:Xetibo/DashNix#mkFlake
+```
+
+This command will put the default configuration into $HOME/gits/nixos
 
 # Modules
 
@@ -302,3 +326,4 @@ For package lists, please check the individual modules, as the lists can be long
 - [chermnyx](https://github.com/chermnyx) for providing a base for zen configuration
 - [voronind-com](https://github.com/voronind-com) for providing the darkreader configuration
 - [Nix-Artwork](https://github.com/NixOS/nixos-artwork/tree/master/logo) for the Nix/NixOS logo (Tim Cuthbertson (@timbertson))
+- [xddxdd](https://github.com/xddxdd) for the CachyOS-Kernel flake
