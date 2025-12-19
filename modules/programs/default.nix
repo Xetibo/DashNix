@@ -1,11 +1,11 @@
 {
   imports = [
-    ./niri.nix
     ./acpid.nix
     ./anyrun.nix
     ./basePackages.nix
     ./bluetooth.nix
     ./browser
+    ./clam.nix
     ./coding.nix
     ./containers.nix
     ./drives.nix
@@ -31,6 +31,7 @@
     ./mime.nix
     ./ncspot.nix
     ./nextcloud.nix
+    ./niri.nix
     ./onedrive.nix
     ./oxi
     ./piper.nix
@@ -47,9 +48,9 @@
     ./sway.nix
     ./teams.nix
     ./virtmanager.nix
+    ./wm.nix
     ./xkb.nix
     ./xone.nix
-    ./wm.nix
     ./yazi
   ];
 }

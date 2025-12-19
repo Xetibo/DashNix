@@ -311,6 +311,7 @@ in {
                   disable_splash_rendering = mkDashDefault true;
                   disable_hyprland_logo = mkDashDefault true;
                   disable_xdg_env_checks = mkDashDefault true;
+                  disable_scale_notification = mkDashDefault true;
                   swallow_regex = mkDashDefault "^(.*)(kitty)(.*)$";
                   initial_workspace_tracking = mkDashDefault 1;
                   # just doesn't work

@@ -5,6 +5,7 @@
   homeMods,
   inputs,
   lib,
+  additionalHomeConfig,
   mod,
   pkgs,
   root,
@@ -58,6 +59,7 @@
           ../lib/foxwrappers.nix
         ]
         ++ homeMods
+        ++ lib.optional (builtins.pathExists additionalHomeConfig) additionalHomeConfig
         ++ lib.optional (builtins.pathExists mod) mod;
     };
   };
