@@ -31,7 +31,7 @@
       ];
       image = [
         {
-          run = ''imv "$@"'';
+          run = ''eog "$@"'';
           orphan = true;
           display_name = "Open";
         }

@@ -85,7 +85,7 @@ in {
       description = "Applications used for handling browser mime types";
     };
     imageApplications = lib.mkOption {
-      default = ["imv"];
+      default = ["eog"];
       example = [];
       type = with lib.types; listOf str;
       description = "Applications used for handling image mime types";

@@ -87,7 +87,7 @@
             # audio control
             playerctl
             # images
-            imv
+            eog
             # videos
             mpv
             # pdf
