@@ -21,7 +21,8 @@
         steam
         # TODO broken
         # lutris
-        wineWowPackages.stable
+        # wineWowPackages.stable
+        wine
         adwsteamgtk
         heroic
         mangohud
