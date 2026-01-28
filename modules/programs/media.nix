@@ -4,13 +4,50 @@
   config,
   pkgs,
   ...
-}: {
+}
+: let
+  packageMapping = import ../../lib/packageMapping.nix {inherit lib;};
+  defaultPackages = with pkgs; [
+    # base audio
+    pipewire
+    wireplumber
+    # audio control
+    playerctl
+    # images
+    eog
+    # videos
+    mpv
+    # pdf
+    zathura
+    evince
+    libreoffice-fresh
+    onlyoffice-desktopeditors
+    pdftk
+    pdfpc
+    polylux2pdfpc
+    # spotify
+    # video editing
+    kdePackages.kdenlive
+    # image creation
+    inkscape
+    gimp
+    krita
+    yt-dlp
+  ];
+  defaultMapping = packageMapping.listToMapping defaultPackages;
+in {
   options.mods.media = {
     useBasePackages = lib.mkOption {
       default = true;
       example = false;
       type = lib.types.bool;
       description = "Default media packages (If disabled, only the additional packages will be installed)";
+    };
+    packageMapping = lib.mkOption {
+      default = defaultMapping;
+      example = {};
+      type = with lib.types; attrsOf anything;
+      description = "Mapping of programs to install. Disable a program by setting the value of the mapping to null: 'zoxide' = null";
     };
     additionalPackages = lib.mkOption {
       default = [];
@@ -76,38 +113,13 @@
           save_files = name;
         };
     };
-    home.packages =
+    home.packages = let
+      mapping = packageMapping.mappingToList (defaultMapping // config.mods.media.packageMapping);
+    in
       if config.mods.media.useBasePackages
       then
-        with pkgs;
-          [
-            # base audio
-            pipewire
-            wireplumber
-            # audio control
-            playerctl
-            # images
-            eog
-            # videos
-            mpv
-            # pdf
-            zathura
-            evince
-            libreoffice-fresh
-            onlyoffice-desktopeditors
-            pdftk
-            pdfpc
-            polylux2pdfpc
-            # spotify
-            # video editing
-            kdePackages.kdenlive
-            # image creation
-            inkscape
-            gimp
-            krita
-            yt-dlp
-          ]
-          ++ config.mods.media.additionalPackages
+        mapping
+        ++ config.mods.media.additionalPackages
       else config.mods.media.additionalPackages;
     programs =
       if config.mods.media.useBasePackages

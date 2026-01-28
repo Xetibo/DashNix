@@ -5,7 +5,26 @@
   options,
   pkgs,
   ...
-}: {
+}: let
+  packageMapping = import ../../lib/packageMapping.nix {inherit lib;};
+  defaultPackages = with pkgs; [
+    protonplus
+    gamescope
+    gamemode
+    steam
+    # TODO broken
+    # lutris
+    # wineWowPackages.stable
+    wine
+    adwsteamgtk
+    heroic
+    mangohud
+    nexusmods-app
+    steamtinkerlaunch
+    winetricks
+  ];
+  defaultMapping = packageMapping.listToMapping defaultPackages;
+in {
   options.mods.gaming = {
     enable = lib.mkOption {
       default = false;
@@ -13,26 +32,11 @@
       type = lib.types.bool;
       description = "Enabled gaming related features.";
     };
-    tools = lib.mkOption {
-      default = with pkgs; [
-        protonplus
-        gamescope
-        gamemode
-        steam
-        # TODO broken
-        # lutris
-        # wineWowPackages.stable
-        wine
-        adwsteamgtk
-        heroic
-        mangohud
-        nexusmods-app
-        steamtinkerlaunch
-        winetricks
-      ];
-      example = [];
-      type = with lib.types; listOf package;
-      description = "Install gaming related packages";
+    packageMapping = lib.mkOption {
+      default = defaultMapping;
+      example = {};
+      type = with lib.types; attrsOf anything;
+      description = "Mapping of programs to install. Disable a program by setting the value of the mapping to null: 'zoxide' = null";
     };
     kernel = lib.mkOption {
       default = false;
@@ -113,7 +117,10 @@
   };
   config = lib.mkIf config.mods.gaming.enable (
     lib.optionalAttrs (options ? environment.systemPackages) {
-      environment.systemPackages = config.mods.gaming.tools;
+      environment.systemPackages = let
+        mapping = packageMapping.mappingToList (defaultMapping // config.mods.gaming.packageMapping);
+      in
+        mapping;
       boot.kernelPackages = lib.mkForce pkgs.cachyosKernels.linuxPackages-cachyos-latest;
       services.scx = lib.mkIf (config.mods.gaming.scheduler != null) {
         enable = true;

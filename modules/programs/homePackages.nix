@@ -5,7 +5,42 @@
   pkgs,
   ...
 }
-: {
+: let
+  packageMapping = import ../../lib/packageMapping.nix {inherit lib;};
+  packages = with pkgs; [
+    adw-gtk3
+    bat
+    brightnessctl
+    dbus
+    fastfetch
+    fd
+    ffmpeg
+    flake-checker
+    gnome-keyring
+    gnutar
+    regreet
+    killall
+    kitty
+    libnotify
+    lsd
+    networkmanager
+    nh
+    nix-index
+    playerctl
+    poppler-utils
+    pulseaudio
+    libsForQt5.qt5ct
+    qt6Packages.qt6ct
+    fuc
+    ripgrep
+    rm-improved
+    system-config-printer
+    xournalpp
+    zenith
+    zoxide
+  ];
+  defaultMapping = packageMapping.listToMapping packages;
+in {
   options.mods.homePackages = {
     useDefaultPackages = lib.mkOption {
       default = true;
@@ -74,6 +109,12 @@
       type = with lib.types; nullOr package;
       description = "The email client";
     };
+    packageMapping = lib.mkOption {
+      default = defaultMapping;
+      example = {};
+      type = with lib.types; attrsOf anything;
+      description = "Mapping of programs to install. Disable a program by setting the value of the mapping to null: 'zoxide' = null";
+    };
     browser = lib.mkOption {
       default = "zen";
       example = "firefox";
@@ -93,7 +134,9 @@
   };
 
   config = lib.optionalAttrs (options ? home.packages) {
-    home.packages =
+    home.packages = let
+      packageList = packageMapping.mappingToList (defaultMapping // config.mods.homePackages.packageMapping);
+    in
       if config.mods.homePackages.useDefaultPackages
       then
         with pkgs;
@@ -109,37 +152,8 @@
                 builtins.isAttrs config.mods.homePackages.browser && config.mods.homePackages.browser != null
               )
               config.mods.homePackages.browser)
-            adw-gtk3
-            bat
-            brightnessctl
-            dbus
-            fastfetch
-            fd
-            ffmpeg
-            flake-checker
-            gnome-keyring
-            gnutar
-            regreet
-            killall
-            kitty
-            libnotify
-            lsd
-            networkmanager
-            nh
-            nix-index
-            playerctl
-            poppler-utils
-            pulseaudio
-            libsForQt5.qt5ct
-            qt6Packages.qt6ct
-            fuc
-            ripgrep
-            rm-improved
-            system-config-printer
-            xournalpp
-            zenith
-            zoxide
           ]
+          ++ packageList
           ++ config.mods.homePackages.additionalPackages
       else config.mods.homePackages.additionalPackages;
 

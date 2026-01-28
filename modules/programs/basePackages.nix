@@ -7,7 +7,38 @@
   inputs,
   system,
   ...
-}: {
+}: let
+  packageMapping = import ../../lib/packageMapping.nix {inherit lib;};
+  defaultPackages = with pkgs; [
+    inputs.statix.packages.${system}.default
+    adwaita-icon-theme
+    dbus
+    dconf
+    direnv
+    glib
+    gnome.nixos-gsettings-overrides
+    gsettings-desktop-schemas
+    gtk-layer-shell
+    gtk3
+    gtk4
+    gtk4-layer-shell
+    hicolor-icon-theme
+    icon-library
+    kdePackages.breeze-icons
+    kdePackages.breeze
+    kdePackages.qtstyleplugin-kvantum
+    libsForQt5.qtstyleplugin-kvantum
+    libadwaita
+    libxkbcommon
+    alejandra
+    openssl
+    seahorse
+    upower
+    xorg.xkbutils
+    sbctl
+  ];
+  defaultMapping = packageMapping.listToMapping defaultPackages;
+in {
   options.mods = {
     basePackages = {
       enable = lib.mkOption {
@@ -17,6 +48,12 @@
         description = ''
           Enables default system packages.
         '';
+      };
+      packageMapping = lib.mkOption {
+        default = defaultMapping;
+        example = {};
+        type = with lib.types; attrsOf anything;
+        description = "Mapping of programs to install. Disable a program by setting the value of the mapping to null: 'zoxide' = null";
       };
       additionalPackages = lib.mkOption {
         default = [];
@@ -47,39 +84,13 @@
   };
 
   config = lib.optionalAttrs (options ? environment.systemPackages) {
-    environment.systemPackages =
+    environment.systemPackages = let
+      mapping = packageMapping.mappingToList (defaultMapping // config.mods.basePackages.packageMapping);
+    in
       if config.mods.basePackages.enable
       then
-        with pkgs;
-          [
-            inputs.statix.packages.${system}.default
-            adwaita-icon-theme
-            dbus
-            dconf
-            direnv
-            glib
-            gnome.nixos-gsettings-overrides
-            gsettings-desktop-schemas
-            gtk-layer-shell
-            gtk3
-            gtk4
-            gtk4-layer-shell
-            hicolor-icon-theme
-            icon-library
-            kdePackages.breeze-icons
-            kdePackages.breeze
-            kdePackages.qtstyleplugin-kvantum
-            libsForQt5.qtstyleplugin-kvantum
-            libadwaita
-            libxkbcommon
-            alejandra
-            openssl
-            seahorse
-            upower
-            xorg.xkbutils
-            sbctl
-          ]
-          ++ config.mods.basePackages.additionalPackages
+        mapping
+        ++ config.mods.basePackages.additionalPackages
       else config.mods.basePackages.additionalPackages;
 
     gtk.iconCache.enable = mkDashDefault false;
