@@ -19,7 +19,6 @@
     adwsteamgtk
     heroic
     mangohud
-    nexusmods-app
     steamtinkerlaunch
     winetricks
   ];
