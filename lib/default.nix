@@ -13,7 +13,7 @@
       permittedInsecurePackages = permittedPackages;
     };
     overlays = [
-      inputs.cachy.overlays.default
+      inputs.cachy.overlays.pinned
       inputs.nur.overlays.default
     ];
     inherit system;
@@ -245,7 +245,6 @@ in rec {
       inputs.reset.homeManagerModules.default
       inputs.sops-nix.homeManagerModules.sops
       inputs.dashvim.homeManagerModules.dashvim
-      ../modules
     ];
 
     unstableInput = unstableBundle.pkgs or inputs.unstable;

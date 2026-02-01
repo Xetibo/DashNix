@@ -57,6 +57,7 @@
           ./themes
           ./sync.nix
           ../lib/foxwrappers.nix
+          ../modules
         ]
         ++ homeMods
         ++ lib.optional (builtins.pathExists additionalHomeConfig) additionalHomeConfig

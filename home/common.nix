@@ -2,10 +2,9 @@
   mkDashDefault,
   config,
   lib,
-  pkgs,
   ...
 }: let
-  username = config.conf.username;
+  inherit (config.conf) username;
 in {
   manual = {
     html.enable = mkDashDefault false;
