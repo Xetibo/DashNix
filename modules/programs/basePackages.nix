@@ -126,7 +126,7 @@ in {
             };
             direnv = {
               package = mkDashDefault pkgs.direnv;
-              silent = mkDashDefault false;
+              silent = mkDashDefault true;
               loadInNixShell = mkDashDefault true;
               direnvrcExtra = mkDashDefault "";
               nix-direnv = {

@@ -81,6 +81,14 @@ in {
         Also supports the oxiced theme in an oxiced attrset.
       '';
     };
+    accentColor = lib.mkOption {
+      default = null;
+      example = "F7768E";
+      type = with lib.types; nullOr str;
+      description = ''
+        Overrides base0D as it is most widely used as primary color.
+      '';
+    };
     cursor = lib.mkOption {
       default = {
         package = pkgs.bibata-cursors;
@@ -119,10 +127,15 @@ in {
     };
   };
   config = let
-    scheme =
+    baseScheme =
       if builtins.isAttrs config.mods.stylix.colorscheme
       then config.mods.stylix.colorscheme
       else "${pkgs.base16-schemes}/share/themes/${config.mods.stylix.colorscheme}.yaml";
+    accentColor =
+      if config.mods.stylix.accentColor != null
+      then config.mods.stylix.accentColor
+      else baseScheme.base0D;
+    scheme = baseScheme // {base0D = accentColor;};
   in
     (lib.optionalAttrs (options ? stylix) {
       stylix = {
@@ -133,8 +146,8 @@ in {
           nixvim.enable = mkDashDefault false;
           fish.enable = mkDashDefault false;
         };
-        fonts = config.mods.stylix.fonts;
-        cursor = config.mods.stylix.cursor;
+        inherit (config.mods.stylix) fonts;
+        inherit (config.mods.stylix) cursor;
         base16Scheme = scheme;
       };
     })
