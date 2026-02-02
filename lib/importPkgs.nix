@@ -12,6 +12,6 @@ import pkgs {
   };
   overlays = [
     inputs.nur.overlays.default
-    inputs.cachy.overlays.default
+    inputs.cachy.overlays.pinned
   ];
 }

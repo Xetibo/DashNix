@@ -18,7 +18,7 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "unstable";
     };
-    cachy.url = "github:xddxdd/nix-cachyos-kernel?rev=bb7b8aa687464f24dcd452354d9621331d6b0737";
+    cachy.url = "github:xddxdd/nix-cachyos-kernel?rev=61a10ef8b4b6f8606fa0658b2053bdd4660c1d92";
 
     sops-nix.url = "github:Mic92/sops-nix";
 

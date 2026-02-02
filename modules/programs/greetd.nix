@@ -44,8 +44,8 @@
       };
       greeterCommand = lib.mkOption {
         default = "${
-          lib.getExe inputs.hyprland.packages.${system}.hyprland
-        } --config /etc/greetd/hyprgreet.conf";
+          inputs.hyprland.packages.${system}.hyprland
+        }/bin/start-hyprland -- --config /etc/greetd/hyprgreet.conf";
         example = "${
           lib.getExe pkgs.cage
         } -s -- ${lib.getExe pkgs.regreet}";
@@ -103,6 +103,10 @@
       lib.optionalAttrs (options ? environment) {
         # greetd display manager
         programs.hyprland.enable = mkDashDefault true;
+        programs.regreet = {
+          enable = mkDashDefault true;
+          settings = config.mods.greetd.regreet.customSettings;
+        };
         services = {
           displayManager.sessionPackages = config.mods.greetd.environments;
           greetd = {
@@ -135,15 +139,13 @@
               disable_scale_notification = true
           }
 
-          env=STATE_DIR,var/cache/regreet
-          env=CACHE_DIR,var/cache/regreet
           env=HYPRCURSOR_THEME,${config.mods.stylix.cursor.name}
           env=HYPRCURSOR_SIZE,${toString config.mods.stylix.cursor.size}
           env=XCURSOR_THEME,${config.mods.stylix.cursor.name}
           env=XCURSOR_SIZE,${toString config.mods.stylix.cursor.size}
           env=QT_QPA_PLATFORMTHEME,qt5ct
 
-          exec-once=regreet --style /home/${username}/.config/gtk-3.0/gtk.css --config /home/${username}/.config/regreet/regreet.toml; hyprctl dispatch exit
+          exec-once=${pkgs.regreet}/bin/regreet --style /home/${username}/.config/gtk-3.0/gtk.css --config /home/${username}/.config/regreet/regreet.toml; hyprctl dispatch exit
         '';
 
         # unlock GPG keyring on login
@@ -154,11 +156,6 @@
           };
           sshAgentAuth.enable = mkDashDefault true;
         };
-      }
-      // lib.optionalAttrs (options ? home) {
-        xdg.configFile."regreet/regreet.toml".source =
-          (pkgs.formats.toml {}).generate "regreet"
-          config.mods.greetd.regreet.customSettings;
       }
     );
 }
