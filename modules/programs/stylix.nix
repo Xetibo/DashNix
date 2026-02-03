@@ -140,7 +140,7 @@ in {
     (lib.optionalAttrs (options ? stylix) {
       stylix = {
         enable = true;
-        image = mkDashDefault (mkWallpaper scheme);
+        image = mkDashDefault (mkWallpaper baseScheme);
         polarity = mkDashDefault "dark";
         targets = {
           nixvim.enable = mkDashDefault false;
