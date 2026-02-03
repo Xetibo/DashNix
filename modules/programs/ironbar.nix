@@ -285,6 +285,8 @@ in {
                 background-color: @muted-text;
               }
 
+              * { padding: 0px; margin: 0px; }
+
               * {
                 transition:
                   background-color 0.15s ease-in-out,
@@ -341,7 +343,7 @@ in {
               .audio-box {
                 padding: 2em;
                 background-color: @background;
-                border-radius: 5px;
+                border-radius: 20px;
                 border: 1px solid @primary;
               }
 
@@ -370,7 +372,7 @@ in {
 
               /* clock  */
               .clock {
-                padding: 0px 5px;
+                padding: 2px 5px 0px;
                 font-size: 20px;
                 border-radius: 5px;
                 background-color: @background;
@@ -386,7 +388,7 @@ in {
                 background-color: @background;
                 border: 1px solid @primary;
                 padding: 0.5em;
-                border-radius: 8px;
+                border-radius: 20px;
                 color: @primary;
               }
 
@@ -461,7 +463,7 @@ in {
               .popup-battery {
                 background-color: @background;
                 color: @primary;
-                border-radius: 8px;
+                border-radius: 20px;
                 border: 1px solid @primary;
                 padding: 16px;
                 font-size: 20px;
@@ -471,7 +473,7 @@ in {
               .music {
                 font-size: 13px;
                 padding: 0px 4px 0px 3px;
-                margin: 2px 0px 2px 0px;
+                margin: 2px 3px 2px 0px;
                 background-color: @background;
                 color: @primary;
               }
@@ -482,13 +484,13 @@ in {
               }
 
               .music .contents .icon {
-                margin: 0px 0px 0px 5px;
+                margin: 0px 0px 0px 3px;
               }
 
               .popup-music {
                 background-color: @background;
                 color: @primary;
-                border-radius: 8px;
+                border-radius: 20px;
                 border: 1px solid @primary;
                 padding: 16px;
                 font-size: 20px;
@@ -497,21 +499,25 @@ in {
               .popup-music .controls .btn-prev {
                 color: @primary;
                 margin-right: 16px;
+                padding: 0px 4px;
               }
 
               .popup-music .controls .btn-next {
                 color: @primary;
                 margin-right: 16px;
+                padding: 0px 4px;
               }
 
               .popup-music .controls .btn-play {
                 color: @primary;
                 margin-right: 16px;
+                padding: 0px 4px;
               }
 
               .popup-music .controls .btn-pause {
                 color: @primary;
                 margin-right: 16px;
+                padding: 0px 4px;
               }
 
               /* system */
@@ -520,7 +526,7 @@ in {
                 color: @primary;
                 border: 1px solid @primary;
                 background-color: @background;
-                border-radius: 8px;
+                border-radius: 20px;
               }
 
               .memory-usage {
@@ -530,6 +536,20 @@ in {
 
               .memory-usage:hover {
                 background-color: @secondary-background;
+              }
+
+              .tray .item {
+                margin: 0px 4px;
+                background-color: @background;
+              }
+
+              .tray popover modelbutton {
+                padding: 2px 8px;
+                margin: 2px 0px;
+              }
+              
+              .tray popover > * {
+                padding: 10px;
               }
             ''
             + config.mods.ironbar.customCss
