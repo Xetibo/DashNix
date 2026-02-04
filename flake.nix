@@ -79,6 +79,9 @@
       };
       system = currentSystem;
     };
+    colorLib = import ./lib/colors.nix {
+      inherit (inputs.unstable) lib;
+    };
     docs = import ./docs {
       inherit inputs;
       pkgs = unstable;

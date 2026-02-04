@@ -34,6 +34,22 @@
           Will be merged with preconfigured prompt if that is used.
         '';
       };
+      colorChange = lib.mkOption {
+        default = "darken";
+        example = "ligthen";
+        type = with lib.types; oneOf [(enum ["ligthen" "darken"]) str];
+        description = ''
+          colorChangeFunction to choose (prompt can be wrong if not used)
+        '';
+      };
+      colorChangeAmount = lib.mkOption {
+        default = 25;
+        example = 20;
+        type = lib.types.int;
+        description = ''
+          Amount to change the color by
+        '';
+      };
     };
   };
 
@@ -43,7 +59,13 @@
       programs.starship = let
         base16 = pkgs.callPackage inputs.base16.lib {};
         scheme = base16.mkSchemeAttrs config.stylix.base16Scheme;
-        code_format = "[](bg:prev_bg fg:#5256c3)[ $symbol ($version)](bg:#5256c3)";
+        colorLib = import ../../lib/colors.nix {inherit lib;};
+        colorChange =
+          if config.mods.starship.colorChange == "darken"
+          then colorLib.darkenColor
+          else colorLib.ligthenColor;
+        darkenedAccent = colorChange scheme.base0D config.mods.starship.colorChangeAmount;
+        code_format = "[](bg:prev_bg fg:#${darkenedAccent})[ $symbol ($version)](bg:#${darkenedAccent})";
       in {
         enable = true;
         interactiveOnly = mkDashDefault true;
@@ -52,23 +74,23 @@
           lib.mkIf config.mods.starship.useDefaultPrompt {
             # derived from https://starship.rs/presets/pastel-powerline
             format = "$username$directory$git_branch$git_status$git_metrics[ ](bg:none fg:prev_bg)";
-            right_format = "$c$elixir$elm$golang$gradle$haskell$java$julia$nodejs$nim$rust$scala$python$ocaml$opa$perl$zig$dart$dotnet$nix_shell$shell$solidity[](bg:prev_bg fg:#3465A4)$time$os";
+            right_format = "$c$elixir$elm$golang$gradle$haskell$java$julia$nodejs$nim$rust$scala$python$ocaml$opa$perl$zig$dart$dotnet$nix_shell$shell$solidity[](bg:prev_bg fg:#${darkenedAccent})$time$os";
             username = {
               show_always = false;
-              style_user = "bg:#5277C3 fg:#${scheme.base05}";
-              style_root = "bg:#5277C3 fg:#${scheme.base05}";
-              format = "[ $user ]($style)[](bg:#3465A4 fg:#5277C3)";
+              style_user = "bg:#${darkenedAccent} fg:#${scheme.base05}";
+              style_root = "bg:#${darkenedAccent} fg:#${scheme.base05}";
+              format = "[ $user ]($style)[](bg:#${darkenedAccent} fg:#${scheme.base05})";
               disabled = false;
             };
             os = {
               symbols = {
                 NixOS = "  ";
               };
-              style = "bg:#3465A4 fg:#${scheme.base05}";
+              style = "bg:#${darkenedAccent} fg:#${scheme.base05}";
               disabled = false;
             };
             directory = {
-              style = "bg:#3465A4 fg:#${scheme.base05}";
+              style = "bg:#${darkenedAccent} fg:#${scheme.base05}";
               format = "[ $path ]($style)";
               truncation_length = 3;
               truncation_symbol = "…/";
@@ -76,26 +98,26 @@
             git_branch = {
               always_show_remote = true;
               symbol = "";
-              style = "bg:#5256c3 fg:#${scheme.base05}";
-              format = "[ ](bg:#5256c3 fg:prev_bg)[$symbol ($remote_name )$branch ]($style)";
+              style = "bg:#${darkenedAccent} fg:#${scheme.base05}";
+              format = "[ ](bg:#${darkenedAccent} fg:prev_bg)[$symbol ($remote_name )$branch ]($style)";
             };
             git_status = {
-              staged = "+\${count} (fg:#C4A000)";
-              ahead = "⇡\${count} (fg:#C4A000)";
-              diverged = "⇕⇡\${count} (fg:#C4A000)";
-              behind = "⇣\${count} (fg:#C4A000)";
+              staged = "+\${count} (fg:#${scheme.base0A})";
+              ahead = "⇡\${count} (fg:#${scheme.base0A})";
+              diverged = "⇕⇡\${count} (fg:#${scheme.base0A})";
+              behind = "⇣\${count} (fg:#${scheme.base0A})";
               stashed = " ";
-              untracked = "?\${count} (fg:#C4A000)";
-              modified = "!\${count} (fg:#C4A000)";
-              deleted = "✘\${count} (fg:#C4A000)";
-              conflicted = "=\${count} (fg:#C4A000)";
-              renamed = "»\${count} (fg:#C4A000)";
-              style = "bg:#5256c3 fg:fg:#C4A000";
+              untracked = "?\${count} (fg:#${scheme.base0A})";
+              modified = "!\${count} (fg:#${scheme.base0A})";
+              deleted = "✘\${count} (fg:#${scheme.base0A})";
+              conflicted = "=\${count} (fg:#${scheme.base0A})";
+              renamed = "»\${count} (fg:#${scheme.base0A})";
+              style = "bg:#${darkenedAccent} fg:fg:#${scheme.base0A}";
               format = "[$all_status$ahead_behind]($style)";
             };
             git_metrics = {
               disabled = false;
-              format = "([| ](bg:#5256c3)[+$added]($added_style bg:#5256c3)[ -$deleted]($deleted_style bg:#5256c3))";
+              format = "([| ](bg:#${darkenedAccent})[+$added](fg:#${scheme.base0B} bg:#${darkenedAccent})[ -$deleted](fg:#${scheme.base08} bg:#${darkenedAccent}))";
             };
             c = {
               format = code_format;
@@ -164,7 +186,7 @@
             time = {
               disabled = false;
               time_format = "%R"; # Hour:Minute Format
-              style = "bg:#3465A4 fg:#${scheme.base05}";
+              style = "bg:#${darkenedAccent} fg:#${scheme.base05}";
               format = "[ $time ]($style)";
             };
           }

@@ -141,7 +141,7 @@ in {
       // (lib.optionalAttrs (options ? home.packages) {
         programs =
           {
-            starship.enableTransience.enable = config.mods.fish.enableStarship;
+            # starship.enableTransience.enable = config.mods.fish.enableStarship;
             yazi.enableFishIntegration = config.mods.fish.enableYazi;
             git-worktree-switcher = {
               enable = config.mods.fish.enableWorktree;
