@@ -14,7 +14,39 @@
   };
 
   outputs = inputs: {
-    nixosConfigurations = inputs.dashNix.dashNixLib.buildSystems {root = ./.;};
+    nixosConfigurations = let
+      currentSystem = "x86_64-linux";
+      permittedPackages = [
+        # "some package"
+      ];
+      config = {
+        system = currentSystem;
+        config = {
+          allowUnfree = true;
+          permittedInsecurePackages = permittedPackages;
+        };
+      };
+      inputOverrides = {
+        # Some inputs
+      };
+      mods = {
+        home = [
+          # Some home manager module
+        ];
+        nixos = [
+          # Some nixos module
+        ];
+      };
+      unstableBundle = {
+        pkgs = inputs.unstable;
+        inputs = inputOverrides;
+        inherit config mods;
+      };
+    in
+      inputs.dashNix.dashNixLib.buildSystems {
+        root = ./.;
+        inherit unstableBundle;
+      };
   };
 
   nixConfig = {

@@ -143,7 +143,6 @@ in {
           [
             (lib.mkIf config.mods.homePackages.ncspot ncspot)
             (lib.mkIf config.mods.homePackages.orcaSlicer orca-slicer)
-            (lib.mkIf config.mods.homePackages.vesktop vesktop)
             (lib.mkIf config.mods.homePackages.nextcloudClient nextcloud-client)
             (lib.mkIf (config.mods.homePackages.matrixClient != null) config.mods.homePackages.matrixClient)
             (lib.mkIf (config.mods.homePackages.mailClient != null) config.mods.homePackages.mailClient)
@@ -162,7 +161,11 @@ in {
         warn_timeout = "-1s";
       };
     };
-    programs = config.mods.homePackages.specialPrograms;
+    programs =
+      config.mods.homePackages.specialPrograms
+      // {
+        vesktop.enable = true;
+      };
     services = config.mods.homePackages.specialServices;
   };
 }

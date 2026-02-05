@@ -171,19 +171,21 @@ You can configure both stable and unstable pkgs the following way:
 Please note that modules and inputs are merged together to ensure functionality.
 
 ```nix
-currentSystem = "x86_64-linux";
-permittedPackages = [
-  "some package"
-];
-config = {
-  system = currentSystem;
+nixosConfigurations = let
+  currentSystem = "x86_64-linux";
+  permittedPackages = [
+    # "some package"
+  ];
   config = {
-    allowUnfree = true;
-    permittedInsecurePackages = permittedPackages;
+    system = currentSystem;
+    config = {
+      allowUnfree = true;
+      permittedInsecurePackages = permittedPackages;
+    };
   };
-  inputs = {
+  inputOverrides = {
     # Some inputs
-  }
+  };
   mods = {
     home = [
       # Some home manager module
@@ -191,16 +193,18 @@ config = {
     nixos = [
       # Some nixos module
     ];
-}
-};
-unstableBundle = {
-  pkgs = inputs.unstable;
-  inherit config mods;
-};
-inputs.dashNix.dashNixLib.buildSystems {
-  root = ./.;
-  inherit unstableBundle;
-}
+  };
+  unstableBundle = {
+    pkgs = inputs.unstable;
+    inputs = inputOverrides;
+    inherit config mods;
+  };
+in
+  inputs.dashNix.dashNixLib.buildSystems {
+    root = ./.;
+    inherit unstableBundle;
+  };
+
 ```
 
 With this you could also change your input to something different should you wish to do so.
