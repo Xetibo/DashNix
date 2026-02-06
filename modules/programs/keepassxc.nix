@@ -2,7 +2,6 @@
   lib,
   config,
   options,
-  pkgs,
   ...
 }: {
   options.mods.keepassxc = {
@@ -49,31 +48,12 @@
       type = with lib.types; attrsOf anything;
       description = "Cache config to be used.";
     };
-    useCacheConfig = lib.mkOption {
-      default = false;
-      example = true;
-      type = lib.types.bool;
-      description = "Whether to overwrite the cache config of keepassxc. Note, this means that changes can't be applied via the program anymore!";
-    };
-    cacheConfig = lib.mkOption {
-      default = '''';
-      example = ''
-        [General]
-        LastDatabases=/path/to/database
-      '';
-      type = lib.types.lines;
-      description = "Cache config to be used.";
-    };
   };
   config = lib.mkIf config.mods.keepassxc.enable (
     lib.optionalAttrs (options ? home.file) {
       programs.keepassxc = {
         enable = true;
         settings = config.mods.keepassxc.config;
-
-        # home.file.".cache/keepassxc/keepassxc.ini" = lib.mkIf config.mods.keepassxc.useCacheConfig {
-        #   text = config.mods.keepassxc.cacheConfig;
-        # };
       };
     }
   );
