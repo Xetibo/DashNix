@@ -13,7 +13,7 @@
       permittedInsecurePackages = permittedPackages;
     };
     overlays = [
-      inputs.cachy.overlays.pinned
+      # inputs.cachy.overlays.pinned
       inputs.nur.overlays.default
     ];
     inherit system;
