@@ -11,7 +11,6 @@ in {
       name = "Zen Browser";
       wrappedPackageName = "zen";
       unwrappedPackageName = "zen-unwrapped";
-      visible = true;
       platforms = {
         linux = {
           vendorPath = ".zen";

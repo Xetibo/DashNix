@@ -39,6 +39,8 @@ in rec {
     stableMods,
     unstableMods,
     overridePkgs,
+    stableInputs,
+    unstableInputs,
     ...
   }:
     builtins.listToAttrs (
@@ -53,6 +55,8 @@ in rec {
             inherit
               self
               inputs
+              stableInputs
+              unstableInputs
               mod
               additionalHomeConfig
               system

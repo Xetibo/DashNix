@@ -13,6 +13,8 @@
   system,
   stable,
   unstable,
+  stableInputs,
+  unstableInputs,
   ...
 }: {
   xdg = {
@@ -44,6 +46,8 @@
         system
         stable
         unstable
+        unstableInputs
+        stableInputs
         dashNixAdditionalProps
         ;
       mkDashDefault = import ../lib/override.nix {inherit lib;};

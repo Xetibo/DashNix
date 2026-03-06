@@ -547,7 +547,7 @@ in {
                 padding: 2px 8px;
                 margin: 2px 0px;
               }
-              
+
               .tray popover > * {
                 padding: 10px;
               }

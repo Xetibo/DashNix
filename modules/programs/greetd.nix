@@ -44,7 +44,7 @@
       };
       greeterCommand = lib.mkOption {
         default = "${
-          inputs.hyprland.packages.${system}.hyprland
+          pkgs.hyprland
         }/bin/start-hyprland -- --config /etc/greetd/hyprgreet.conf";
         example = "${
           lib.getExe pkgs.cage
@@ -69,7 +69,7 @@
       };
       environments = lib.mkOption {
         default = [
-          (lib.mkIf config.mods.hypr.hyprland.enable inputs.hyprland.packages.${config.conf.system}.hyprland)
+          (lib.mkIf config.mods.hypr.hyprland.enable pkgs.hyprland)
           (lib.mkIf config.mods.niri.enable pkgs.niri)
         ];
         # no idea if these are written correctly

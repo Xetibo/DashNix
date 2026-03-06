@@ -152,7 +152,7 @@ in {
           enable = mkDashDefault true;
           createDirectories = mkDashDefault true;
           extraConfig = {
-            XDG_SCREENSHOTS_DIR = mkDashDefault "${config.xdg.userDirs.pictures}/Screenshots";
+            SCREENSHOTS = mkDashDefault "${config.xdg.userDirs.pictures}/Screenshots";
             pws = mkDashDefault "${config.home.homeDirectory}/pws";
           };
         };

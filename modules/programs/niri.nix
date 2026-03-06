@@ -41,7 +41,7 @@ in {
       # TODO deduplicate and abstract away base window management config
       # install Niri related packages
       home.packages = with pkgs; [
-        xorg.xprop
+        xprop
         grim
         slurp
         satty

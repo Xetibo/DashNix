@@ -81,7 +81,7 @@ in {
     lib.optionalAttrs (options ? wayland.windowManager.hyprland) {
       # install Hyprland related packages
       home.packages = with pkgs; [
-        xorg.xprop
+        xprop
         grim
         slurp
         satty
@@ -241,6 +241,7 @@ in {
           defaultWindowRules;
       in {
         enable = true;
+        package = pkgs.hyprland;
         plugins =
           [
             (lib.mkIf config.mods.hypr.hyprland.hyprspaceEnable pkgs.hyprlandPlugins.hyprspace)

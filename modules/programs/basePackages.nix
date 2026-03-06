@@ -34,7 +34,7 @@
     openssl
     seahorse
     upower
-    xorg.xkbutils
+    xkbutils
     sbctl
   ];
   defaultMapping = packageMapping.listToMapping defaultPackages;
