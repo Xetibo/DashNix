@@ -412,7 +412,7 @@ in {
     }
 
     # Hyprland only keybinds
-    (mkSimpleCustomBind ["Mod"] "C" null "togglesplit" [])
+    (mkSimpleCustomBind ["Mod"] "C" null "layoutmsg" ["swapsplit"])
     (mkSimpleCustomBind ["Mod" "SHIFT" "ALT"] "1" null "movetoworkspacesilent" ["1"])
     (mkSimpleCustomBind ["Mod" "SHIFT" "ALT"] "2" null "movetoworkspacesilent" ["2"])
     (mkSimpleCustomBind ["Mod" "SHIFT" "ALT"] "3" null "movetoworkspacesilent" ["3"])
