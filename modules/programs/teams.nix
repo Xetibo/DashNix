@@ -4,9 +4,7 @@
   options,
   pkgs,
   ...
-}: let
-  callPackage = lib.callPackageWith pkgs;
-in {
+}: {
   options.mods.teams = {
     enable = lib.mkOption {
       default = false;
@@ -23,7 +21,7 @@ in {
   };
   config = lib.mkIf config.mods.teams.enable (
     lib.optionalAttrs (options ? home.packages) {
-      home.packages = [(callPackage ../../override/teams.nix {inherit (pkgs) chromium;})];
+      home.packages = [pkgs.teams-for-linux];
     }
     // (lib.optionalAttrs (options ? boot.kernelModules) {
       boot = {
