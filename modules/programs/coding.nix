@@ -241,8 +241,6 @@ in {
               nodejs_20
               deno
               typescript
-              nodePackages.typescript-language-server
-              nodePackages.prettier
             ];
             example = [];
             type = with lib.types; listOf package;
@@ -450,7 +448,6 @@ in {
           };
           packages = lib.mkOption {
             default = with pkgs; [
-              nodePackages.sql-formatter
               sqls
             ];
             example = [];
