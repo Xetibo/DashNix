@@ -88,13 +88,13 @@ in {
         else ""
       )
       (
-        if config.mods.oxi.oxipaste.enable
-        then "oxipaste_daemon"
+        if config.mods.hypr.hyprland.useOxiBar
+        then "oxibar"
         else ""
       )
       (
-        if config.mods.oxi.oxinoti.enable
-        then "oxinoti"
+        if config.mods.oxi.oxipaste.enable
+        then "oxipaste_daemon"
         else ""
       )
     ];

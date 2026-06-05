@@ -35,7 +35,7 @@
     anyrun.url = "github:Kirottu/anyrun";
     oxicalc.url = "github:Xetibo/OxiCalc";
     oxishut.url = "github:Xetibo/OxiShut";
-    oxinoti.url = "github:Xetibo/OxiNoti";
+    oxibar.url = "github:Xetibo/OxiBar?ref=wip";
     oxidash.url = "github:Xetibo/OxiDash";
     oxipaste.url = "github:Xetibo/OxiPaste";
     oxirun.url = "github:Xetibo/OxiRun";

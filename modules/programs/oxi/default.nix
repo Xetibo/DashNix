@@ -7,7 +7,7 @@
 }: {
   imports = [
     ./oxidash.nix
-    ./oxinoti.nix
+    ./oxibar.nix
     ./oxipaste.nix
     ./oxirun.nix
     ./oxishut.nix

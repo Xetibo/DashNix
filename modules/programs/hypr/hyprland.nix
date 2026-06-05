@@ -28,11 +28,19 @@ in {
       '';
     };
     useIronbar = lib.mkOption {
+      default = false;
+      example = true;
+      type = lib.types.bool;
+      description = ''
+        Whether to use ironbar in hyprland.
+      '';
+    };
+    useOxiBar = lib.mkOption {
       default = true;
       example = false;
       type = lib.types.bool;
       description = ''
-        Whether to use ironbar in hyprland.
+        Whether to use oxibar in hyprland.
       '';
     };
     useDefaultConfig = lib.mkOption {

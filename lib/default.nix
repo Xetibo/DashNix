@@ -240,7 +240,7 @@ in rec {
       inputs.ironbar.homeManagerModules.default
       inputs.oxicalc.homeManagerModules.default
       inputs.oxishut.homeManagerModules.default
-      inputs.oxinoti.homeManagerModules.default
+      inputs.oxibar.homeManagerModules.default
       inputs.oxidash.homeManagerModules.default
       inputs.oxipaste.homeManagerModules.default
       inputs.oxirun.homeManagerModules.default

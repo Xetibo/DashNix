@@ -296,7 +296,7 @@ in {
     startup = lib.mkOption {
       default = [];
       example = {
-        all = ["oxinoti"];
+        all = ["oxibar"];
         niri = ["someniricommand"];
         hyprland = ["somehyprlandcommand"];
       };
