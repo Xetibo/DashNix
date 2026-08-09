@@ -230,6 +230,8 @@ in rec {
       inputs.disko.nixosModules.disko
       inputs.superfreq.nixosModules.default
       inputs.sops-nix.nixosModules.sops
+      inputs.nix-gaming.nixosModules.pipewireLowLatency
+      inputs.nix-gaming.nixosModules.platformOptimizations
       ../base
       ../home
       ../modules

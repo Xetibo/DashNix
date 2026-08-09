@@ -44,9 +44,12 @@
       };
       greeterCommand = lib.mkOption {
         # pkgs.hyprland
+        # console output is redirected to a log file so that the Plymouth ->
+        # greeter transition stays clean instead of flashing compositor debug
+        # output on the TTY.
         default = "${
           inputs.hyprland.packages.${system}.default
-        }/bin/start-hyprland -- --config /etc/greetd/hyprgreet.lua";
+        }/bin/start-hyprland -- --config /etc/greetd/hyprgreet.lua > /tmp/hyprgreet.log 2>&1";
         example = "${
           lib.getExe pkgs.cage
         } -s -- ${lib.getExe pkgs.regreet}";
@@ -100,20 +103,65 @@
 
   config = let
     inherit (config.conf) username;
+    hyprlandPkg = inputs.hyprland.packages.${system}.default;
+
+    # Wrap a Hyprland package so that starting the session via greetd redirects
+    # the compositor's console output to a log file instead of printing it on
+    # the TTY during the Plymouth -> Hyprland transition. The session is
+    # launched through the desktop entry's Exec line (an absolute path into the
+    # session package), so the wrapper has to ship its own start-hyprland and
+    # patched desktop entry inside the package itself.
+    # symlinkJoin preserves the whole original package (binaries, portal files,
+    # version, ...) while postBuild swaps in the quiet start script and patched
+    # desktop entries. lndir creates symlinks into the read-only original, so
+    # the symlinks must be removed before writing replacements.
+    mkQuietSession = pkg:
+      pkgs.symlinkJoin {
+        name = "${pkg.name}-quiet-session";
+        paths = [ pkg ];
+        version = pkg.version or null;
+        passthru.providedSessions = pkg.providedSessions;
+        postBuild = ''
+          rm -f $out/bin/start-hyprland
+          cat > $out/bin/start-hyprland <<EOF
+          #!/bin/sh
+          exec "${pkg}"/bin/start-hyprland "\$@" > /tmp/hyprland-session.log 2>&1
+          EOF
+          chmod +x $out/bin/start-hyprland
+          for desktop in "${pkg}"/share/wayland-sessions/*.desktop; do
+            base=$(basename "$desktop")
+            rm -f "$out/share/wayland-sessions/$base"
+            sed "s|Exec=${pkg}/bin/start-hyprland|Exec=$out/bin/start-hyprland|" "$desktop" \
+              > "$out/share/wayland-sessions/$base"
+          done
+        '';
+      };
+
+    quietHyprland = mkQuietSession hyprlandPkg;
+
+    sessionPackages = builtins.map (pkg:
+      if pkg == hyprlandPkg then quietHyprland else pkg)
+      config.mods.greetd.environments;
   in
     lib.mkIf config.mods.greetd.enable (
       lib.optionalAttrs (options ? environment) {
         # greetd display manager
         programs.hyprland = {
+          # keep the real package for systemPackages/portal/xwayland handling;
+          # the session is registered via displayManager.sessionPackages below.
           package = inputs.hyprland.packages.${system}.default;
           enable = mkDashDefault true;
         };
         programs.regreet = {
-          enable = mkDashDefault true;
+          enable = true;
           settings = config.mods.greetd.regreet.customSettings;
         };
         services = {
-          displayManager.sessionPackages = config.mods.greetd.environments;
+          # mkForce: the nixpkgs programs.hyprland module also registers
+          # [cfg.package] (the unwrapped real package) as a session, which would
+          # offer an extra, noisy Hyprland entry in the login prompt. Force our
+          # wrapped session list so only the quiet session is offered.
+          displayManager.sessionPackages = lib.mkForce sessionPackages;
           greetd = {
             enable = true;
             settings = {

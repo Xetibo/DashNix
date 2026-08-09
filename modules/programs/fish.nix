@@ -114,7 +114,6 @@ in {
               };
               shellAliases = {
                 rebuild = "nh os switch -- --accept-flake-config";
-                update = "nix flake update --flake $FLAKE --accept-flake-config";
                 gcli = "gh";
               };
 

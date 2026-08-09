@@ -18,6 +18,12 @@
       type = lib.types.bool;
       description = "Enables the audioControl script";
     };
+    update = lib.mkOption {
+      default = true;
+      example = false;
+      type = lib.types.bool;
+      description = "Enables the nix flake update script";
+    };
     scripts = lib.mkOption {
       default = [];
       example = [];
@@ -116,6 +122,9 @@
             	set_volume_source "$2"
             fi
           ''
+        ))
+        (lib.mkIf config.mods.scripts.update (
+          import ../../scripts/update.nix {inherit pkgs;}
         ))
       ]
       ++ config.mods.scripts.scripts;

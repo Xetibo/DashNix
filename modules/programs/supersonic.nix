@@ -29,11 +29,7 @@ in {
   config = lib.mkIf config.mods.supersonic.enable (
     lib.optionalAttrs (options ? home.packages) {
       home.packages = with pkgs; [
-        (
-          if config.mods.supersonic.variant == "wayland"
-          then supersonic-wayland
-          else supersonic
-        )
+        supersonic
       ];
       xdg.configFile."supersonic/themes/custom.toml".source =
         (pkgs.formats.toml {}).generate "customTheme"

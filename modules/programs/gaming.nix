@@ -4,6 +4,8 @@
   config,
   options,
   pkgs,
+  inputs,
+  system,
   ...
 }: let
   packageMapping = import ../../lib/packageMapping.nix {inherit lib;};
@@ -119,15 +121,24 @@ in {
       environment.systemPackages = let
         mapping = packageMapping.mappingToList (defaultMapping // config.mods.gaming.packageMapping);
       in
-        mapping;
+        mapping
+        ++ [
+          inputs.nix-gaming.packages.${system}.low-latency-layer
+        ];
       # boot.kernelPackages = lib.mkForce pkgs.cachyosKernels.linuxPackages-cachyos-latest;
-      services.scx = lib.mkIf (config.mods.gaming.scheduler != null) {
-        enable = true;
-        inherit (config.mods.gaming) scheduler;
+      services = {
+        scx = lib.mkIf (config.mods.gaming.scheduler != null) {
+          enable = true;
+          inherit (config.mods.gaming) scheduler;
+        };
+        pipewire.lowLatency.enable = true;
       };
 
       programs = {
-        steam.enable = mkDashDefault config.mods.gaming.steam;
+        steam = {
+          enable = mkDashDefault config.mods.gaming.steam;
+          platformOptimizations.enable = true;
+        };
         gamemode.enable = true;
         gamemode = {
           settings = {

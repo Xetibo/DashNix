@@ -68,6 +68,7 @@ in {
           if config.mods.kitty.useDefaultConfig
           then
             {
+              auto_reload_config = "-1";
               enable_audio_bell = "no";
               window_alert_on_bell = "no";
               cursor_blink_interval = "0";

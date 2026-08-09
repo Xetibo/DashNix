@@ -41,6 +41,8 @@
     oxirun.url = "github:Xetibo/OxiRun";
     dashvim.url = "github:Xetibo/DashVim";
 
+    nix-gaming.url = "github:fufexan/nix-gaming";
+
     hyprdock.url = "github:Xetibo/hyprdock";
     reset.url = "github:Xetibo/ReSet";
     reset-plugins.url = "github:Xetibo/ReSet-Plugins";

@@ -19,10 +19,11 @@
     };
   };
 
-  config = lib.optionalAttrs (options ? services.superfreq) {
-    services.superfreq = {
-      enable = config.mods.superfreq.enable;
-      settings = config.mods.superfreq.settings;
-    };
-  };
+  # TODO broken
+  # config = lib.optionalAttrs (options ? services.superfreq) {
+  #   services.superfreq = {
+  #     enable = config.mods.superfreq.enable;
+  #     settings = config.mods.superfreq.settings;
+  #   };
+  # };
 }
