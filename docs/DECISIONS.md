@@ -3,6 +3,29 @@
 Log of notable design decisions for LLM continuity. Keep entries concise; do
 not duplicate component-specific details that live in module code or docs.
 
+## 2026-08-14: OxiBar configurable via mods.oxi.oxibar
+
+`modules/programs/oxi/oxibar.nix` now exposes user-facing options instead of a
+hardcoded `plugin_config`.
+
+Options:
+- `mods.oxi.oxibar.settings` (`attrsOf anything`) — full OxiBar `plugin_config`
+  (plugins list, `[bar]`, per-plugin tables). Default is the previous hardcoded
+  config.
+- `mods.oxi.oxibar.clock.enable` (default `true`) — removes clock from the
+  plugins list, from `bar.center`, and drops the `[clock]` section when unset.
+- `mods.oxi.oxibar.battery.enable` (default `false`) — adds `libbattery.so` to
+  plugins and `battery` to `bar.end`, and carries `settings.battery` into the
+  generated config when set.
+
+Decision: keep the `settings` option type `attrsOf anything` with a
+`default`. Setting any sub-path of `settings` *replaces* the whole option value
+under the module system (`anything` merge is shallow), so the final
+`plugin_config` is computed as `lib.recursiveUpdate defaultSettings
+cfg.settings` to regain deep-merge semantics (user keys win, defaults fill the
+rest; lists replace wholesale). Enable toggles are applied on top. This mirrors
+the ironbar `customConfig` + `useBatteryModule` pattern.
+
 ## 2026-08-05: Quiet Hyprland output during Plymouth -> greeter/session handoff
 
 The user wants a seamless Plymouth -> Hyprland transition without compositor
