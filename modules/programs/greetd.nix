@@ -118,7 +118,7 @@
     mkQuietSession = pkg:
       pkgs.symlinkJoin {
         name = "${pkg.name}-quiet-session";
-        paths = [ pkg ];
+        paths = [pkg];
         version = pkg.version or null;
         passthru.providedSessions = pkg.providedSessions;
         postBuild = ''
@@ -140,8 +140,10 @@
     quietHyprland = mkQuietSession hyprlandPkg;
 
     sessionPackages = builtins.map (pkg:
-      if pkg == hyprlandPkg then quietHyprland else pkg)
-      config.mods.greetd.environments;
+      if pkg == hyprlandPkg
+      then quietHyprland
+      else pkg)
+    config.mods.greetd.environments;
   in
     lib.mkIf config.mods.greetd.enable (
       lib.optionalAttrs (options ? environment) {

@@ -125,7 +125,7 @@ in {
         "dashvim.cachix.org-1:uLRdxp1WOWHnsZZtu3SwUWZRsvC7SXo0Gyk3tIefuL0="
       ];
 
-      experimental-features = mkDashDefault "nix-command flakes pipe-operators";
+      experimental-features = mkDashDefault ["nix-command flakes pipe-operators"];
     };
   };
 
