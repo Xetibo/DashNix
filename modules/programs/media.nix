@@ -20,7 +20,7 @@
     # pdf
     zathura
     evince
-    libreoffice-fresh
+    libreoffice-stable
     onlyoffice-desktopeditors
     pdftk
     pdfpc
