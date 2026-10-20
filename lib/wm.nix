@@ -5,6 +5,17 @@ let
     else if config.mods.homePackages.browser ? meta && config.mods.homePackages.browser.meta ? mainProgram
     then config.mods.homePackages.browser.meta.mainProgram
     else config.mods.homePackages.browser.pname;
+  oxiActive = config: config.mods.wm.suite == "oxi" && config.mods.oxi.enable;
+  oxiShellActive = config: oxiActive config && config.mods.oxi.oxibar.enable;
+  oxiLockActive = config: oxiActive config && config.mods.oxi.oxilock.enable;
+  oxibarCommand = config: let
+    pkg = (config.programs.oxibar or {}).package or null;
+  in
+    if pkg != null
+    then "${pkg}/bin/oxibar"
+    else "oxibar";
+  oxilockCommand = config: "${config.programs.oxilock.package}/bin/oxilock";
+  oxilockSleepCommand = config: "${config.programs.oxilock.package}/bin/oxilock-sleep";
   mkSimpleBind = modKeys: key: command: args: {
     inherit modKeys key command args;
   };
@@ -31,31 +42,52 @@ let
     }
     // mkSimpleBind modKeys key command args;
 in {
-  defaultWindowRules = {
-    niri = [
-      ''
-        match app-id=r#"^org\.keepassxc\.KeePassXC$"#
-        match app-id=r#"^org\.gnome\.World\.Secrets$"#
+  defaultWindowRules = config: let
+    noctaliaActive = config.mods.wm.suite == "noctalia" && config.mods.noctalia.enable;
+  in {
+    niri =
+      [
+        ''
+          match app-id=r#"^org\.keepassxc\.KeePassXC$"#
+          match app-id=r#"^org\.gnome\.World\.Secrets$"#
 
-        block-out-from "screen-capture"
-      ''
-      ''
-        match app-id=r#"^steam$"#
-        open-on-workspace "0"
-      ''
-      ''
-        geometry-corner-radius 12
-        clip-to-geometry true
-      ''
-    ];
-    hyprland = [
-      # window rules
-      "match:class OxiCalc, float on"
-      "match:class winecfg.exe, float on"
-      "match:class copyq, float on"
-      "match:class swappy, center on"
-      "match:class steam, workspace 10 silent"
-    ];
+          block-out-from "screen-capture"
+        ''
+        ''
+          match app-id=r#"^steam$"#
+          open-on-workspace "0"
+        ''
+      ]
+      ++ (
+        if noctaliaActive
+        then [
+          ''
+            match app-id=r#"^dev\.noctalia\.Noctalia$"#
+            open-floating true
+          ''
+        ]
+        else []
+      )
+      ++ [
+        ''
+          geometry-corner-radius 12
+          clip-to-geometry true
+        ''
+      ];
+    hyprland =
+      [
+        # window rules
+        "match:class OxiCalc, float on"
+        "match:class winecfg.exe, float on"
+        "match:class copyq, float on"
+        "match:class swappy, center on"
+        "match:class steam, workspace 10 silent"
+      ]
+      ++ (
+        if noctaliaActive
+        then ["match:class dev.noctalia.Noctalia, float on"]
+        else []
+      );
   };
 
   defaultStartup = config: {
@@ -73,7 +105,7 @@ in {
       # other programs
       "${browserName config}"
       (
-        if config.mods.oxi.hyprdock.enable
+        if oxiActive config && config.mods.oxi.hyprdock.enable
         then "hyprdock --server"
         else ""
       )
@@ -83,18 +115,40 @@ in {
         else ""
       )
       (
-        if config.mods.hypr.hyprland.useIronbar
+        if config.mods.wm.suite != "noctalia" && config.mods.hypr.hyprland.useIronbar
         then "ironbar"
         else ""
       )
       (
-        if config.mods.hypr.hyprland.useOxiBar
-        then "oxibar"
+        if oxiShellActive config && config.mods.hypr.hyprland.useOxiBar
+        then
+          if config.mods.oxi.oxibar.systemd.enable
+          then "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE && systemctl --user start oxibar.service"
+          else oxibarCommand config
         else ""
       )
       (
-        if config.mods.oxi.oxipaste.enable
+        if oxiActive config && config.mods.oxi.oxipaste.enable
         then "oxipaste_daemon"
+        else ""
+      )
+      (
+        if oxiLockActive config && config.mods.oxi.oxilock.sleepIntegration
+        then "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE && systemctl --user start oxilock-sleep.service"
+        else ""
+      )
+      (
+        if config.mods.wm.suite == "noctalia" && config.mods.noctalia.enable
+        then
+          # Absolute store path: the compositor's PATH at autostart time does
+          # not reliably include the HM profile, which silently breaks bare
+          # executable names here.
+          let
+            pkg = (config.programs.noctalia or {}).package or null;
+          in
+            if pkg != null
+            then "${pkg}/bin/noctalia"
+            else "noctalia"
         else ""
       )
     ];
@@ -181,7 +235,13 @@ in {
 
     (mkBindWithDesc ["Mod"] "N" "spawn" ["neovide"] "Open Neovide")
     (mkBindWithDesc ["Mod"] "T" "spawn-sh" ["kitty -1"] "Open Kitty")
-    (mkBindWithDesc ["Mod" "Shift"] "L" "spawn" ["hyprlock"] "Lock screen")
+    (
+      if oxiLockActive config
+      then mkBindWithDesc ["Mod" "Shift"] "L" "spawn" [(oxilockCommand config)] "Lock screen"
+      else if config.mods.hypr.hyprlock.enable
+      then mkBindWithDesc ["Mod" "Shift"] "L" "spawn" ["hyprlock"] "Lock screen"
+      else {}
+    )
 
     (
       if config.mods.yazi.enable
@@ -194,42 +254,88 @@ in {
       else {}
     )
     (
-      if config.mods.oxi.oxirun.enable
+      if oxiActive config && config.mods.oxi.oxirun.enable && !config.mods.anyrun.enable
       then mkBindWithDesc ["Mod"] "R" "spawn" ["oxirun"] "Open OxiRun"
+      else if oxiShellActive config && !config.mods.anyrun.enable
+      then mkBindWithDesc ["Mod"] "R" "spawn-sh" ["${oxibarCommand config} launcher toggle"] "Open Oxibar launcher"
       else {}
     )
     (
-      if config.mods.oxi.oxidash.enable
+      if config.mods.wm.suite == "noctalia" && config.mods.noctalia.enable && !config.mods.anyrun.enable
+      then mkBindWithDesc ["Mod"] "R" "spawn-sh" ["noctalia msg panel-toggle launcher"] "Open Noctalia launcher"
+      else {}
+    )
+    (
+      if oxiShellActive config
+      then mkBindWithDesc ["Mod"] "Space" "spawn-sh" ["${oxibarCommand config} launcher toggle"] "Open Oxibar launcher"
+      else if config.mods.wm.suite == "noctalia" && config.mods.noctalia.enable
+      then mkBindWithDesc ["Mod"] "Space" "spawn-sh" ["noctalia msg panel-toggle launcher"] "Open Noctalia launcher"
+      else {}
+    )
+    (
+      if oxiActive config && config.mods.oxi.oxidash.enable
       then mkBindWithDesc ["Mod"] "M" "spawn" ["oxidash"] "Open OxiDash"
+      else if oxiShellActive config
+      then mkBindWithDesc ["Mod"] "M" "spawn-sh" ["${oxibarCommand config} control-center toggle"] "Open Oxibar control center"
       else {}
     )
     (
-      if config.mods.oxi.oxicalc.enable
+      if config.mods.wm.suite == "noctalia" && config.mods.noctalia.enable
+      then mkBindWithDesc ["Mod"] "M" "spawn-sh" ["noctalia msg panel-toggle control-center"] "Open Noctalia control center"
+      else {}
+    )
+    (
+      if config.mods.oxi.enable && config.mods.oxi.oxicalc.enable
       then mkBindWithDesc ["Mod"] "G" "spawn" ["oxicalc"] "Open Oxicalc"
       else {}
     )
     (
-      if config.mods.oxi.oxishut.enable
+      if oxiActive config && config.mods.oxi.oxishut.enable
       then mkBindWithDesc ["Mod"] "D" "spawn" ["oxishut"] "Open OxiShut"
+      else if oxiShellActive config
+      then mkBindWithDesc ["Mod"] "D" "spawn-sh" ["${oxibarCommand config} session toggle"] "Open Oxibar session menu"
       else {}
     )
     (
-      if config.mods.oxi.oxipaste.enable
+      if config.mods.wm.suite == "noctalia" && config.mods.noctalia.enable
+      then mkBindWithDesc ["Mod"] "D" "spawn-sh" ["noctalia msg panel-toggle session"] "Open Noctalia session menu"
+      else {}
+    )
+    (
+      if oxiShellActive config
+      then mkBindWithDesc ["Mod" "Shift"] "D" "spawn-sh" ["${oxibarCommand config} settings toggle"] "Open Oxibar settings"
+      else if config.mods.wm.suite == "noctalia" && config.mods.noctalia.enable
+      then mkBindWithDesc ["Mod" "Shift"] "D" "spawn-sh" ["noctalia msg settings-toggle"] "Open Noctalia settings"
+      else {}
+    )
+    (
+      if oxiShellActive config && config.mods.oxi.oxibar.clipboard.enable
+      then mkBindWithDesc ["Mod"] "A" "spawn-sh" ["${oxibarCommand config} oxipaste toggle"] "Open Oxibar OxiPaste"
+      else if oxiActive config && config.mods.oxi.oxipaste.enable
       then mkBindWithDesc ["Mod"] "A" "spawn" ["oxipaste"] "Open Oxipaste"
       else {}
     )
     (
-      if config.mods.oxi.hyprdock.enable
+      if config.mods.wm.suite == "noctalia" && config.mods.noctalia.enable
+      then mkBindWithDesc ["Mod"] "A" "spawn-sh" ["noctalia msg panel-toggle clipboard"] "Open Noctalia clipboard"
+      else {}
+    )
+    (
+      if oxiActive config && config.mods.oxi.hyprdock.enable
       then mkBindWithDesc ["Mod" "Shift"] "P" "spawn" ["hyprdock --gui"] "Open Hyprdock"
       else {}
     )
     (
-      if config.mods.hypr.hyprlock.enable
+      if oxiLockActive config
+      then mkBindWithDesc ["Mod" "Shift" "Alt"] "L" "spawn-sh" ["playerctl -a pause; ${oxilockSleepCommand config} --suspend"] "Lock and suspend"
+      else if config.mods.hypr.hyprlock.enable
       then mkBindWithDesc ["Mod" "Shift" "Alt"] "L" "spawn-sh" ["playerctl -a pause & hyprlock & systemctl suspend"] "Lock and suspend"
       else {}
     )
     (
-      if config.mods.hypr.hyprlock.enable
+      if oxiLockActive config && config.mods.oxi.oxilock.sleepIntegration
+      then mkBindWithDesc ["Mod" "Shift" "Alt"] "K" "spawn-sh" ["playerctl -a pause; systemctl hibernate"] "Hibernate with OxiLock sleep integration"
+      else if !oxiLockActive config && config.mods.hypr.hyprlock.enable
       then mkBindWithDesc ["Mod" "Shift" "Alt"] "K" "spawn-sh" ["playerctl -a pause & hyprlock & systemctl hibernate"] "Lock and hibernate"
       else {}
     )
@@ -248,11 +354,17 @@ in {
     (mkBindWithDesc ["Mod" "Shift"] "S" "spawn-sh" [''grim -g "$(slurp)" - | satty -f -''] "Take Screenshot and edit")
 
     (
-      if config.mods.scripts.audioControl
+      if oxiShellActive config || config.mods.scripts.audioControl
       then {
         key = "XF86AudioMute";
         command = "spawn-sh";
-        args = ["audioControl mute"];
+        args = [
+          (
+            if oxiShellActive config
+            then "${oxibarCommand config} action Audio mute toggle"
+            else "audioControl mute"
+          )
+        ];
         meta.niri = {
           allowWhileLocked = true;
           desc = "Mute Audio";
@@ -261,11 +373,17 @@ in {
       else {}
     )
     (
-      if config.mods.scripts.audioControl
+      if oxiShellActive config || config.mods.scripts.audioControl
       then {
         key = "XF86AudioRaiseVolume";
         command = "spawn-sh";
-        args = ["audioControl +5%"];
+        args = [
+          (
+            if oxiShellActive config
+            then "${oxibarCommand config} action Audio volume +5"
+            else "audioControl +5%"
+          )
+        ];
         meta.niri = {
           allowWhileLocked = true;
           desc = "Raise Audio Volume";
@@ -274,11 +392,17 @@ in {
       else {}
     )
     (
-      if config.mods.scripts.audioControl
+      if oxiShellActive config || config.mods.scripts.audioControl
       then {
         key = "XF86AudioLowerVolume";
         command = "spawn-sh";
-        args = ["audioControl -5%"];
+        args = [
+          (
+            if oxiShellActive config
+            then "${oxibarCommand config} action Audio volume -5"
+            else "audioControl -5%"
+          )
+        ];
         meta.niri = {
           allowWhileLocked = true;
           desc = "Lower Audio Volume";
@@ -314,11 +438,17 @@ in {
       };
     }
     (
-      if config.mods.scripts.changeBrightness
+      if oxiShellActive config || config.mods.scripts.changeBrightness
       then {
         key = "XF86MonBrightnessDown";
         command = "spawn-sh";
-        args = ["changeBrightness -10%"];
+        args = [
+          (
+            if oxiShellActive config
+            then "${oxibarCommand config} action System brightness -10"
+            else "changeBrightness -10%"
+          )
+        ];
         meta.niri = {
           allowWhileLocked = true;
           desc = "Lower Brigthness";
@@ -327,11 +457,17 @@ in {
       else {}
     )
     (
-      if config.mods.scripts.changeBrightness
+      if oxiShellActive config || config.mods.scripts.changeBrightness
       then {
         key = "XF86MonBrightnessUp";
         command = "spawn-sh";
-        args = ["changeBrightness +10%"];
+        args = [
+          (
+            if oxiShellActive config
+            then "${oxibarCommand config} action System brightness +10"
+            else "changeBrightness +10%"
+          )
+        ];
         meta.niri = {
           allowWhileLocked = true;
           desc = "Raise Brigthness";
@@ -369,15 +505,19 @@ in {
     (mkSimpleCustomBind ["Mod" "Ctrl"] "J" "move-column-to-monitor-left" null [])
     (mkSimpleCustomBind ["Mod" "Ctrl"] "semicolon" "move-column-to-monitor-right" null [])
     (mkSimpleCustomBind ["Mod" "Shift"] "Slash" "show-hotkey-overlay" null [])
-    {
-      modKeys = ["Mod"];
-      key = "W";
-      command.niri = "toggle-overview";
-      meta.niri = {
-        desc = "Overview";
-        repeat = false;
-      };
-    }
+    (
+      if oxiShellActive config
+      then mkBindWithDesc ["Mod"] "W" "spawn-sh" ["${oxibarCommand config} overview toggle"] "Oxibar overview"
+      else {
+        modKeys = ["Mod"];
+        key = "W";
+        command.niri = "toggle-overview";
+        meta.niri = {
+          desc = "Overview";
+          repeat = false;
+        };
+      }
+    )
     {
       modKeys = ["Mod"];
       key = "Escape";
@@ -433,7 +573,7 @@ in {
     (mkSimpleCustomBind ["Mod" "ALT"] "semicolon" null "layoutmsg" ["preselect" "r"])
     (mkSimpleCustomBind ["Mod" "ALT"] "H" null "layoutmsg" ["preselect" "n"])
     (
-      if config.mods.hypr.hyprland.hyprspaceEnable
+      if !oxiShellActive config && config.mods.hypr.hyprland.hyprspaceEnable
       then {
         modKeys = ["Mod"];
         key = "W";

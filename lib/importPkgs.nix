@@ -13,5 +13,6 @@ import pkgs {
   overlays = [
     inputs.nur.overlays.default
     inputs.cachy.overlays.pinned
+    (import ./go-compat-overlay.nix)
   ];
 }

@@ -7,7 +7,10 @@
   options,
   system,
   ...
-}: {
+}: let
+  hyprlandPkgs = import ../../lib/hyprland-packages.nix {inherit inputs system;};
+  hyprlandPkg = hyprlandPkgs.hyprland;
+in {
   options.mods = {
     greetd = {
       enable = lib.mkOption {
@@ -26,7 +29,7 @@
         example = "eDP-1";
         type = lib.types.str;
         description = ''
-          main monitor for the login screen.
+          Main monitor for the Noctalia login screen.
           By default the main monitor is used.
         '';
       };
@@ -38,23 +41,15 @@
         example = "1.5";
         type = lib.types.str;
         description = ''
-          Scale used by the monitor in the login screen.
+          Scale used by the monitor in the Noctalia login screen.
           By default the scale of the main monitor is used.
         '';
       };
       greeterCommand = lib.mkOption {
-        # pkgs.hyprland
-        # console output is redirected to a log file so that the Plymouth ->
-        # greeter transition stays clean instead of flashing compositor debug
-        # output on the TTY.
-        default = "${
-          inputs.hyprland.packages.${system}.default
-        }/bin/start-hyprland -- --config /etc/greetd/hyprgreet.lua > /tmp/hyprgreet.log 2>&1";
-        example = "${
-          lib.getExe pkgs.cage
-        } -s -- ${lib.getExe pkgs.regreet}";
-        type = lib.types.str;
-        description = "The compositor/greeter command to run";
+        default = null;
+        example = "/path/to/custom-greeter";
+        type = lib.types.nullOr lib.types.str;
+        description = "Override the upstream compositor/greeter command. Null uses the selected greeter's owned kiosk.";
       };
       resolution = lib.mkOption {
         default =
@@ -68,13 +63,14 @@
         example = "3440x1440@180";
         type = lib.types.str;
         description = ''
-          Resolution/refreshrate used by the monitor in the login screen.
+          Resolution/refreshrate used by the monitor in the Noctalia login screen.
+          OxiSession uses its kiosk's preferred output modes.
         '';
       };
       environments = lib.mkOption {
         default = [
           # (lib.mkIf config.mods.hypr.hyprland.enable pkgs.hyprland)
-          (lib.mkIf config.mods.hypr.hyprland.enable inputs.hyprland.packages.${system}.default)
+          (lib.mkIf config.mods.hypr.hyprland.enable hyprlandPkg)
           (lib.mkIf config.mods.niri.enable pkgs.niri)
         ];
         # no idea if these are written correctly
@@ -88,13 +84,41 @@
           List of environments that should be available in the login prompt.
         '';
       };
-      regreet = {
+      greeter = lib.mkOption {
+        type = lib.types.enum ["oxisession" "noctalia"];
+        default =
+          if config.mods.wm.suite == "oxi"
+          then "oxisession"
+          else "noctalia";
+        example = "oxisession";
+        description = ''
+          Greeter to show on the greetd login screen. Defaults to OxiSession
+          for the Oxi suite and Noctalia otherwise. Both follow the DashNix theme.
+        '';
+      };
+      oxisession = {
+        backend = lib.mkOption {
+          default = "hyprland";
+          example = "cage";
+          type = lib.types.enum ["cage" "hyprland"];
+          description = "Owned kiosk compositor. Hyprland uses the pinned desktop release, Lua configuration, and the desktop's input and cursor settings.";
+        };
+        settings = lib.mkOption {
+          default = {};
+          example = {appearance.clock_format = "%H:%M";};
+          inherit (pkgs.formats.toml {}) type;
+          description = "Administrator-owned OxiSession authentication appearance settings, merged over the DashNix theme and wallpaper.";
+        };
+      };
+      noctalia = {
         customSettings = lib.mkOption {
           default = {};
           example = {};
           type = with lib.types; attrsOf anything;
           description = ''
-            Custom regret settings. See https://github.com/rharish101/ReGreet/blob/main/regreet.sample.toml for more information.
+            Custom noctalia-greeter settings, merged over the dashnix-themed
+            defaults. See https://docs.noctalia.dev/greeter/configuration/ for
+            all keys.
           '';
         };
       };
@@ -103,7 +127,6 @@
 
   config = let
     inherit (config.conf) username;
-    hyprlandPkg = inputs.hyprland.packages.${system}.default;
 
     # Wrap a Hyprland package so that starting the session via greetd redirects
     # the compositor's console output to a log file instead of printing it on
@@ -144,6 +167,111 @@
       then quietHyprland
       else pkg)
     config.mods.greetd.environments;
+
+    useNoctaliaGreeter = config.mods.greetd.greeter == "noctalia";
+
+    oxisessionPackage =
+      (inputs.oxibar.packages.${system}.oxisession.override {
+        hyprland = hyprlandPkg;
+      }).overrideAttrs (old: {
+        patches = (old.patches or []) ++ [../../patches/oxisession-hyprland-lua.patch];
+        postFixup =
+          (old.postFixup or "")
+          + ''
+            wrapProgram "$out/bin/oxisession-kiosk" ${lib.escapeShellArgs (lib.concatLists (lib.mapAttrsToList (name: value: ["--set" name value]) kioskEnvironment))}
+          '';
+      });
+
+    desktopHome = config.home-manager.users.${username} or {};
+    desktopHyprland = desktopHome.wayland.windowManager.hyprland or {};
+    inputSettings =
+      if desktopHyprland.enable or false
+      then {
+        input = desktopHyprland.settings.config.input or {};
+        cursor = desktopHyprland.settings.config.cursor or {};
+      }
+      else
+        (import ../../lib/hyprland-input.nix) (
+          if desktopHome ? mods
+          then desktopHome
+          else config
+        );
+    cursorConfig = desktopHome.mods.stylix.cursor or config.mods.stylix.cursor;
+    cursorPackage = desktopHome.home.pointerCursor.package or cursorConfig.package;
+    asList = value:
+      if builtins.isList value
+      then value
+      else [value];
+    cursorDefaults = {
+      HYPRCURSOR_THEME = cursorConfig.name;
+      HYPRCURSOR_SIZE = toString cursorConfig.size;
+      XCURSOR_THEME = cursorConfig.name;
+      XCURSOR_SIZE = toString cursorConfig.size;
+    };
+    cursorEnvironment =
+      cursorDefaults
+      // builtins.listToAttrs (builtins.map (entry: {
+          name = builtins.elemAt entry._args 0;
+          value = toString (builtins.elemAt entry._args 1);
+        })
+        (builtins.filter (entry:
+          entry ? _args
+          && builtins.length entry._args >= 2
+          && builtins.elem (builtins.head entry._args) (builtins.attrNames cursorDefaults))
+        (asList (desktopHyprland.settings.env or []))));
+    toLua = lib.generators.toLua {};
+    greeterHyprlandConfig = pkgs.writeText "oxisession-hyprland.lua" ''
+      hl.config(${toLua inputSettings})
+      ${lib.concatMapStringsSep "\n" (device: "hl.device(${toLua device})") (asList (desktopHyprland.settings.device or []))}
+      hl.on("hyprland.start", function()
+        hl.exec_cmd(${toLua (lib.escapeShellArgs ["${hyprlandPkg}/bin/hyprctl" "setcursor" cursorConfig.name (toString cursorConfig.size)])})
+      end)
+    '';
+    # greetd constructs a fresh PAM environment instead of inheriting its daemon's.
+    kioskEnvironment =
+      cursorEnvironment
+      // {
+        XKB_CONFIG_ROOT = config.services.xserver.xkb.dir;
+        XKB_DEFAULT_VARIANT = inputSettings.input.kb_variant or "";
+        XCURSOR_PATH = "${cursorPackage}/share/icons";
+        XDG_DATA_DIRS = "${cursorPackage}/share:/run/current-system/sw/share";
+        OXI_HYPRLAND_CONFIG = "${greeterHyprlandConfig}";
+      };
+
+    # Greeter palette derived from the resolved stylix scheme (accent
+    # override already applied), mirroring the shell's stylix palette roles.
+    greeterScheme = config.stylix.base16Scheme;
+    greeterHex = color: "#" + lib.removePrefix "#" color;
+    greeterPalette = {
+      primary = greeterHex greeterScheme.base0D;
+      on_primary = greeterHex greeterScheme.base00;
+      secondary = greeterHex greeterScheme.base0E;
+      on_secondary = greeterHex greeterScheme.base00;
+      tertiary = greeterHex greeterScheme.base0C;
+      on_tertiary = greeterHex greeterScheme.base00;
+      error = greeterHex greeterScheme.base08;
+      on_error = greeterHex greeterScheme.base00;
+      surface = greeterHex greeterScheme.base00;
+      on_surface = greeterHex greeterScheme.base05;
+      surface_variant = greeterHex greeterScheme.base01;
+      on_surface_variant = greeterHex greeterScheme.base04;
+      outline = greeterHex greeterScheme.base03;
+      shadow = greeterHex greeterScheme.base00;
+      hover = greeterHex greeterScheme.base0D;
+      on_hover = greeterHex greeterScheme.base00;
+    };
+
+    # "RESxRES@RATE" -> { width, height, refresh_rate }, null when unset.
+    greeterMode = let
+      m = builtins.match "([0-9]+)x([0-9]+)@([0-9]+)" config.mods.greetd.resolution;
+    in
+      if m == null
+      then null
+      else {
+        width = builtins.fromJSON (builtins.elemAt m 0);
+        height = builtins.fromJSON (builtins.elemAt m 1);
+        refresh_rate = builtins.fromJSON (builtins.elemAt m 2);
+      };
   in
     lib.mkIf config.mods.greetd.enable (
       lib.optionalAttrs (options ? environment) {
@@ -151,12 +279,9 @@
         programs.hyprland = {
           # keep the real package for systemPackages/portal/xwayland handling;
           # the session is registered via displayManager.sessionPackages below.
-          package = inputs.hyprland.packages.${system}.default;
+          package = hyprlandPkg;
+          portalPackage = hyprlandPkgs.xdg-desktop-portal-hyprland;
           enable = mkDashDefault true;
-        };
-        programs.regreet = {
-          enable = true;
-          settings = config.mods.greetd.regreet.customSettings;
         };
         services = {
           # mkForce: the nixpkgs programs.hyprland module also registers
@@ -164,59 +289,81 @@
           # offer an extra, noisy Hyprland entry in the login prompt. Force our
           # wrapped session list so only the quiet session is offered.
           displayManager.sessionPackages = lib.mkForce sessionPackages;
+          oxisession = lib.mkIf (!useNoctaliaGreeter) {
+            enable = true;
+            package = mkDashDefault oxisessionPackage;
+            inherit sessionPackages;
+            inherit (config.mods.greetd.oxisession) backend;
+            keyboardLayout = inputSettings.input.kb_layout or "us";
+            settings =
+              lib.recursiveUpdate {
+                theme = import ../../lib/oxi-theme.nix {inherit config lib;};
+                appearance.wallpaper = "${config.stylix.image}";
+              }
+              config.mods.greetd.oxisession.settings;
+          };
+          displayManager.noctalia-greeter = lib.mkIf useNoctaliaGreeter {
+            enable = true;
+            cursorTheme = {
+              inherit (config.mods.stylix.cursor) package name;
+            };
+            settings = lib.mkMerge [
+              {
+                session.default =
+                  if config.mods.niri.enable
+                  then "niri"
+                  else "Hyprland";
+                user.default = username;
+                appearance = {
+                  scheme = "Synced";
+                  theme_mode = config.stylix.polarity;
+                  font_family = config.mods.stylix.fonts.sansSerif.name;
+                  palette = greeterPalette;
+                  wallpaper = {
+                    path = "${config.stylix.image}";
+                    fill_mode = "crop";
+                  };
+                };
+                cursor.size = config.mods.stylix.cursor.size;
+                keyboard =
+                  {
+                    layout = config.mods.xkb.layout;
+                  }
+                  // lib.optionalAttrs (config.mods.xkb.variant != "") {
+                    variant = config.mods.xkb.variant;
+                  };
+              }
+              (lib.optionalAttrs (config.mods.greetd.monitor != "") {
+                output.name = config.mods.greetd.monitor;
+              })
+              (lib.optionalAttrs (config.mods.greetd.scale != "") {
+                output.scale = builtins.fromJSON config.mods.greetd.scale;
+              })
+              (lib.optionalAttrs (greeterMode != null) {
+                output = {
+                  inherit (greeterMode) width height refresh_rate;
+                };
+              })
+              config.mods.greetd.noctalia.customSettings
+            ];
+          };
           greetd = {
             enable = true;
             settings = {
               terminal.vt = mkDashDefault 1;
-              default_session = {
-                command = mkDashDefault config.mods.greetd.greeterCommand;
-                user = mkDashDefault username;
+              default_session = lib.mkIf (config.mods.greetd.greeterCommand != null) {
+                command = lib.mkForce config.mods.greetd.greeterCommand;
               };
             };
           };
         };
 
-        # should technically be the same, but this is configured instead in order to provide a decent out of the box login experience.
-        environment.etc."greetd/hyprgreet.lua".text =
-          /*
-          lua
-          */
-          ''
-            hl.monitor({
-              ["output"] = "${config.mods.greetd.monitor}",
-              ["mode"] = "${config.mods.greetd.resolution}",
-              ["position"] = "0x0",
-              ["scale"] = "${config.mods.greetd.scale}"
-            })
-            hl.monitor({
-              ["output"] = "",
-              ["disabled"] = true
-            })
-
-            hl.config({
-              ["input"] = {
-                ["kb_layout"] = "${config.mods.xkb.layout}",
-                ["kb_variant"] = "${config.mods.xkb.variant}",
-                ["force_no_accel"] = true,
-              },
-              ["misc"] = {
-                ["disable_splash_rendering"] = false,
-                ["disable_hyprland_logo"] = true,
-                ["disable_xdg_env_checks"] = true,
-                ["disable_scale_notification"] = true,
-              }
-            })
-
-            hl.env("HYPRCURSOR_THEME", "${config.mods.stylix.cursor.name}")
-            hl.env("HYPRCURSOR_SIZE", "${toString config.mods.stylix.cursor.size}")
-            hl.env("XCURSOR_THEME", "${config.mods.stylix.cursor.name}")
-            hl.env("XCURSOR_SIZE", "${toString config.mods.stylix.cursor.size}")
-            hl.env("QT_QPA_PLATFORMTHEME", "qt5ct")
-
-            hl.on("hyprland.start", function()
-              hl.exec_cmd("${pkgs.regreet}/bin/regreet --style /home/${username}/.config/gtk-3.0/gtk.css --config /home/${username}/.config/regreet/regreet.toml; hyprctl dispatch exit")
-            end)
-          '';
+        systemd.services.greetd = {
+          serviceConfig = {
+            StandardOutput = "journal";
+            StandardError = "journal";
+          };
+        };
 
         # unlock GPG keyring on login
         security.pam = {

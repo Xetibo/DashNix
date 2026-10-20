@@ -18,7 +18,6 @@
     flake-checker
     gnome-keyring
     gnutar
-    regreet
     killall
     kitty
     libnotify

@@ -34,8 +34,28 @@
     ];
     gpu.nvidia.enable = true;
     kdeConnect.enable = true;
+    # YubiKey management and U2F PAM authentication are opt-in.
+    # yubikey.enable = true;
+    # yubikey.pam.enable = false; # Keep PAM disabled during initial key enrollment.
+    # The default Oxi suite uses Oxibar's shell/dock, OxiLock, and OxiSession.
+    # oxi.oxibar.battery.enable = true;
+    # oxi.oxibar.settings.dock.pinned = ["firefox" "kitty"];
+    # oxi.oxibar.clipboard.enable = false;
+    # oxi.oxilock.settings.appearance.clock_format = "%H:%M";
+    # Noctalia shell (only active with `wm.suite = "noctalia"`):
+    # selects the noctalia suite instead of the default oxi suite
+    # wm.suite = "noctalia";
+    # Noctalia ships dashnix defaults (full-width bar, enlarged
+    # clock/workspaces, clock in the palette accent). Override per key via
+    # https://docs.noctalia.dev/noctalia/configuration/shell/ and
+    # https://github.com/noctalia-dev/noctalia/blob/main/example.toml
+    # (theme.* keys are owned by stylix and would be overridden).
+    # noctalia.settings = {
+    #   widget.clock.font_scale = 1.8;
+    # };
     # login manager:
-    # default is greetd
+    # Default is greetd with the suite's greeter (oxisession for Oxi).
+    # greetd.oxisession.settings.appearance.clock_format = "%H:%M";
     # greetd = { };
     # sddm = { };
     # gdm = { };

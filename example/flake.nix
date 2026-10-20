@@ -63,6 +63,7 @@
       "https://hyprdock.cachix.org"
       "https://reset.cachix.org"
       "https://dashvim.cachix.org"
+      "https://noctalia.cachix.org"
     ];
 
     extra-trusted-public-keys = [
@@ -76,6 +77,7 @@
       "hyprdock.cachix.org-1:HaROK3fBvFWIMHZau3Vq1TLwUoJE8yRbGLk0lEGzv3Y="
       "reset.cachix.org-1:LfpnUUdG7QM/eOkN7NtA+3+4Ar/UBeYB+3WH+GjP9Xo="
       "dashvim.cachix.org-1:uLRdxp1WOWHnsZZtu3SwUWZRsvC7SXo0Gyk3tIefuL0="
+      "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="
     ];
   };
 }

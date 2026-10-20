@@ -1,0 +1,114 @@
+diff --git a/crates/oxi-session/src/kiosk.rs b/crates/oxi-session/src/kiosk.rs
+--- a/crates/oxi-session/src/kiosk.rs
++++ b/crates/oxi-session/src/kiosk.rs
+@@ -85,10 +85,16 @@ pub fn run(backend: &str) -> Result<(), Error> {
+             .arg(backend);
+         command
+     } else {
+-        let config = directory.0.join("hyprland.conf");
++        let config = directory.0.join("hyprland.lua");
+         fs::write(&config, hyprland_config(&executable, &directory.0))?;
+-        let mut command = Command::new(binary("OXI_HYPRLAND", "Hyprland"));
+-        command.arg("--config").arg(config);
++        let hyprland = binary("OXI_HYPRLAND", "Hyprland");
++        let launcher = PathBuf::from(&hyprland).with_file_name("start-hyprland");
++        let mut command = Command::new(launcher);
++        command
++            .arg("--path")
++            .arg(hyprland)
++            .args(["--", "--config"])
++            .arg(config);
+         command
+     };
+     for key in [
+@@ -204,11 +210,16 @@ fn exit_owned_hyprland(state: &Path) -> Result<(), Error> {
+     Ok(())
+ }
+ 
+-fn owns_instance(instances: &serde_json::Value, signature: &str, pid: u32) -> bool {
++fn owns_instance(instances: &serde_json::Value, signature: &str, process_group: u32) -> bool {
+     instances.as_array().is_some_and(|instances| {
+         instances.iter().any(|instance| {
+             instance["instance"].as_str() == Some(signature)
+-                && instance["pid"].as_u64() == Some(pid.into())
++                && instance["pid"]
++                    .as_i64()
++                    .and_then(|pid| i32::try_from(pid).ok())
++                    .filter(|pid| *pid > 0)
++                    // start-hyprland supervises a compositor in its process group.
++                    .is_some_and(|pid| unsafe { libc::getpgid(pid) } == process_group as i32)
+         })
+     })
+ }
+@@ -246,8 +257,20 @@ fn hyprland_config(executable: &Path, state: &Path) -> String {
+                     .all(|c| c.is_ascii_alphanumeric() || "_,-+".contains(c))
+         })
+         .unwrap_or_else(|| "us".into());
++    let shared = std::env::var_os("OXI_HYPRLAND_CONFIG")
++        .map(|path| {
++            let path = serde_json::to_string(&path.to_string_lossy()).unwrap();
++            format!("dofile({path})\n")
++        })
++        .unwrap_or_default();
++    let child = serde_json::to_string(&format!("{executable} --child {state} hyprland")).unwrap();
+     format!(
+-        "monitor = ,preferred,auto,1\ninput {{\n kb_layout = {layout}\n}}\nmisc {{\n disable_hyprland_logo = true\n disable_splash_rendering = true\n}}\nexec-once = {executable} --child {state} hyprland\n"
++        "hl.monitor({{ output = \"\", mode = \"preferred\", position = \"auto\", scale = 1 }})\n\
++         hl.config({{ input = {{ kb_layout = \"{layout}\" }}, misc = {{ disable_hyprland_logo = true, disable_splash_rendering = true }} }})\n\
++         {shared}\
++         hl.on(\"hyprland.start\", function()\n\
++           hl.exec_cmd({child})\n\
++         end)\n"
+     )
+ }
+ 
+@@ -260,13 +283,14 @@ mod tests {
+         assert!(!accepted("", ExitStatus::from_raw(0)));
+         assert!(!accepted("rejected\n", ExitStatus::from_raw(0)));
+         assert!(!accepted("accepted\n", ExitStatus::from_raw(1 << 8)));
+         assert!(accepted("accepted\n", ExitStatus::from_raw(0)));
+-        let instances =
+-            serde_json::json!([{"instance":"owned","pid":42},{"instance":"desktop","pid":99}]);
+-        assert!(owns_instance(&instances, "owned", 42));
+-        assert!(!owns_instance(&instances, "desktop", 42));
+-        assert!(!owns_instance(&instances, "owned", 99));
++        let pid = std::process::id();
++        let group = unsafe { libc::getpgrp() } as u32;
++        let instances = serde_json::json!([{"instance":"owned","pid":pid}]);
++        assert!(owns_instance(&instances, "owned", group));
++        assert!(!owns_instance(&instances, "desktop", group));
++        assert!(!owns_instance(&instances, "owned", group + 1));
+         let config = hyprland_config(
+             Path::new("/system/path with spaces/kiosk"),
+             Path::new("/runtime/private dir"),
+         );
+@@ -278,3 +302,29 @@ mod tests {
+         assert!(!config.contains("source ="));
+     }
++
++    #[test]
++    fn supervised_compositor_must_belong_to_the_launcher_process_group() {
++        let mut launcher = Command::new("sleep")
++            .arg("30")
++            .process_group(0)
++            .spawn()
++            .unwrap();
++        let mut compositor = Command::new("sleep")
++            .arg("30")
++            .process_group(launcher.id() as i32)
++            .spawn()
++            .unwrap();
++        let instances = serde_json::json!([
++            {"instance":"owned","pid":compositor.id()},
++            {"instance":"desktop","pid":std::process::id()}
++        ]);
++        let owned = owns_instance(&instances, "owned", launcher.id());
++        let foreign = owns_instance(&instances, "desktop", launcher.id());
++        compositor.kill().unwrap();
++        compositor.wait().unwrap();
++        launcher.kill().unwrap();
++        launcher.wait().unwrap();
++        assert!(owned);
++        assert!(!foreign);
++    }
+ }

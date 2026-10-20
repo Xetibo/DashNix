@@ -23,7 +23,9 @@ dashNix = {
 
 You can then configure your systems in your flake outputs with a provided library command:
 
-Please note that overriding inputs will invalidate the cache configuration, this means you will have to add this manually:
+Binary-cache settings from dependency flakes are not inherited. Add the following settings to your root flake's `nixConfig` and accept them with `--accept-flake-config` when building. DashNix also enables its trusted caches in the installed system's `nix.settings.substituters`.
+
+Hyprland is pinned to release v0.56.2. Its upstream release flake supplies the Home Manager module; runtime packages come from the separately pinned `hyprland-release` nixpkgs input because that release's upstream flake compositor was not available in the Hyprland cache. Keep `hyprland-release` independent of system nixpkgs: adding overlays, making it follow another input, or overriding build inputs changes derivation hashes and can force source builds. Consumer nixpkgs updates alone leave this release package unchanged. DashNix selects compositor, portal, Mesa, and userspace graphics drivers from the same package set to avoid libc mismatches.
 
 ```nix
   builders-use-substitutes = true;
@@ -297,7 +299,7 @@ For package lists, please check the individual modules, as the lists can be long
 - git : Git key and config module
 - gnome_services : Gnome services for minimal enviroments -> Window managers etc
 - gpu : GPU settings (AMD)
-- greetd : Enables and configures the greetd/regreet login manager with Hyprland
+- greetd : Enables greetd with the themed OxiSession kiosk for Oxi, or the Noctalia greeter
 - home packages : A list of home packages to be installed by default
 - kde_connect : Enables KDE connect and opens its ports
 - keepassxc : Configures keepassxc
@@ -306,7 +308,7 @@ For package lists, please check the individual modules, as the lists can be long
 - media packages : A list of media packages to be installed by default
 - mime: Mime type configuration
 - nextcloud : Handles synchronization via nextcloud cmd. (requires config.sops.secrets.nextcloud)
-- oxi: My own programs, can be selectively disabled, or as a whole
+- oxi: Oxibar desktop shell, OxiLock, and optional standalone Oxi programs
 - piper : Installs and enables piper alongside its daemon
 - plymouth: enable or disable plymouth
 - printing : Enables and configures printing services
@@ -319,6 +321,78 @@ For package lists, please check the individual modules, as the lists can be long
 - xkb: Keyboard layout configuration
 - xone : Installs the xone driver
 - yazi: Installs yazi and sets custom keybinds
+- yubikey: Opt-in YubiKey management, smart-card support, and U2F PAM authentication
+
+## YubiKey
+
+`mods.yubikey.enable` defaults to `false`. Enable it in the host configuration:
+
+```nix
+mods.yubikey.enable = true;
+```
+
+This installs `ykman` and `pamu2fcfg`, enables PC/SC smart-card support and YubiKey
+udev rules, and enables U2F authentication for NixOS PAM services, including login,
+sudo, and the desktop locker. The default `pam.control = "sufficient"` allows key
+authentication with password fallback. Services with their own PAM stack can opt
+out through `security.pam.services.<name>.u2f.enable = false`. The greeter inherits
+the `login` PAM stack, so configure `login` to change its U2F policy.
+
+For initial enrollment, set `mods.yubikey.pam.enable = false`, rebuild, then run
+the following as the user who will authenticate, touching the key when requested.
+Use this to create a new mapping file; preserve existing mappings when adding keys:
+
+```sh
+mkdir -p ~/.config/Yubico
+umask 077
+pamu2fcfg > ~/.config/Yubico/u2f_keys
+```
+
+Use `$XDG_CONFIG_HOME/Yubico/u2f_keys` instead if `XDG_CONFIG_HOME` is set. Remove
+the `pam.enable = false` override and rebuild to enable authentication.
+`mods.yubikey.pam.authFile` accepts a runtime path for a centrally managed mapping;
+`pam.cue` controls the touch reminder. Enrollment files remain outside the Nix
+store. The module configures system authentication only in NixOS scope.
+
+## Oxi desktop suite
+
+`mods.wm.suite = "oxi"` is the default for Hyprland and niri. It runs Oxibar's
+resident shell and dock, uses OxiLock for locking and sleep integration, and
+selects OxiSession as greetd's login screen. All three follow the Stylix theme.
+OxiSession's login kiosk uses Hyprland by default, configured through
+`mods.greetd.oxisession.backend`. It uses the same pinned Hyprland release as the
+desktop, launches through `start-hyprland`, and generates Lua configuration.
+The login kiosk shares the primary user's resolved cursor theme/size, keyboard
+layout/variant, mouse/touchpad settings, and per-device overrides. Configure these
+through the usual Stylix/XKB options and structured Hyprland settings; the kiosk
+uses shared defaults when the user's Hyprland compositor is disabled.
+
+| Shortcut | Surface |
+| --- | --- |
+| Mod+Space / Mod+R | Launcher |
+| Mod+M | Control center |
+| Mod+D | Session menu |
+| Mod+Shift+D | Settings |
+| Mod+W | Overview |
+| Mod+A | OxiPaste clipboard picker |
+| Mod+Shift+L | Lock |
+| Mod+Shift+Alt+L | Lock, wait for readiness, then suspend |
+
+Configure shell defaults with `mods.oxi.oxibar.settings`, lockscreen appearance
+with `mods.oxi.oxilock.settings`, and login appearance with
+`mods.greetd.oxisession.settings`. Settings merge recursively; lists replace
+defaults. Shell GUI edits are stored separately in `~/.config/oxibar/overrides.toml`.
+Set `mods.oxi.oxibar.clipboard.enable = false` to disable built-in clipboard history.
+The OxiPaste picker uses `oxibar oxipaste toggle` and needs a separately running,
+updated OxiPaste daemon. The launcher's `:` prefix still opens the in-memory Tools
+clipboard history.
+
+The older OxiRun, OxiDash, OxiShut, OxiPaste, ReSet, and hyprdock are opt-in;
+their existing `mods.oxi.<app>.enable` options remain available. OxiCalc keeps
+its independent Mod+G shortcut. Explicit ReGreet configurations must switch
+`mods.greetd.greeter` to `"oxisession"` and migrate appearance settings.
+Standalone Home Manager users need the system administrator to install
+OxiLock's PAM policy.
 
 # Credits
 

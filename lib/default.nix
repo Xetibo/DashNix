@@ -7,6 +7,7 @@
   dashNixAdditionalProps ? {},
   ...
 }: let
+  goCompatOverlay = import ./go-compat-overlay.nix;
   defaultConfig = {
     config = {
       allowUnfree = true;
@@ -15,6 +16,7 @@
     overlays = [
       inputs.cachy.overlays.pinned
       inputs.nur.overlays.default
+      goCompatOverlay
     ];
     inherit system;
   };
@@ -232,6 +234,7 @@ in rec {
       inputs.sops-nix.nixosModules.sops
       inputs.nix-gaming.nixosModules.pipewireLowLatency
       inputs.nix-gaming.nixosModules.platformOptimizations
+      inputs.oxibar.nixosModules.authentication
       ../base
       ../home
       ../modules
@@ -243,11 +246,13 @@ in rec {
       inputs.oxicalc.homeManagerModules.default
       inputs.oxishut.homeManagerModules.default
       inputs.oxibar.homeManagerModules.default
+      inputs.oxibar.homeManagerModules.oxilock
       inputs.oxidash.homeManagerModules.default
       inputs.oxipaste.homeManagerModules.default
       inputs.oxirun.homeManagerModules.default
       inputs.hyprdock.homeManagerModules.default
       inputs.hyprland.homeManagerModules.default
+      inputs.noctalia.homeModules.default
       inputs.reset.homeManagerModules.default
       inputs.sops-nix.homeManagerModules.sops
       inputs.dashvim.homeManagerModules.dashvim

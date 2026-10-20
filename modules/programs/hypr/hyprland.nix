@@ -9,6 +9,8 @@
   ...
 }: let
   defaultWmConf = import ../../../lib/wm.nix;
+  inputDefaults = (import ../../../lib/hyprland-input.nix) config;
+  hyprlandPkgs = import ../../../lib/hyprland-packages.nix {inherit inputs system;};
 in {
   options.mods.hypr.hyprland = {
     enable = lib.mkOption {
@@ -41,6 +43,7 @@ in {
       type = lib.types.bool;
       description = ''
         Whether to use oxibar in hyprland.
+        Only started when mods.wm.suite is "oxi".
       '';
     };
     useDefaultConfig = lib.mkOption {
@@ -184,7 +187,7 @@ in {
         mkWindowRule = cfg: let
           defaultWindowRules =
             if cfg.mods.wm.useDefaultWindowRules
-            then defaultWmConf.defaultWindowRules.hyprland
+            then (defaultWmConf.defaultWindowRules cfg).hyprland
             else [];
           userWindowRules = cfg.mods.wm.windowRules.hyprland or [];
           allRules = defaultWindowRules ++ userWindowRules;
@@ -363,7 +366,8 @@ in {
       in {
         enable = true;
         # package = pkgs.hyprland;
-        package = inputs.hyprland.packages.${system}.default;
+        package = hyprlandPkgs.hyprland;
+        portalPackage = hyprlandPkgs.xdg-desktop-portal-hyprland;
         plugins =
           [
             (lib.mkIf config.mods.hypr.hyprland.hyprspaceEnable pkgs.hyprlandPlugins.hyprspace)
@@ -469,17 +473,7 @@ in {
                     permanent_direction_override = mkDashDefault false;
                   };
 
-                  input = {
-                    kb_layout = mkDashDefault "${config.mods.xkb.layout}";
-                    kb_variant = mkDashDefault "${config.mods.xkb.variant}";
-                    repeat_delay = mkDashDefault 200;
-                    force_no_accel = mkDashDefault true;
-                    touchpad = {
-                      natural_scroll = mkDashDefault true;
-                      tap_to_click = mkDashDefault true;
-                      tap_and_drag = mkDashDefault true;
-                    };
-                  };
+                  input = lib.mapAttrsRecursive (_: mkDashDefault) inputDefaults.input;
 
                   misc = {
                     animate_manual_resizes = mkDashDefault 1;
@@ -494,16 +488,7 @@ in {
                     enable_anr_dialog = false;
                   };
 
-                  cursor = {
-                    enable_hyprcursor = mkDashDefault true;
-                    no_hardware_cursors = mkDashDefault (
-                      if config.mods.gpu.nvidia.enable
-                      then 2
-                      else 0
-                    );
-                    #done with nix, this would break the current setup otherwise
-                    sync_gsettings_theme = mkDashDefault false;
-                  };
+                  cursor = lib.mapAttrsRecursive (_: mkDashDefault) inputDefaults.cursor;
 
                   group = {
                     col = {
@@ -527,13 +512,18 @@ in {
                   action = "workspace";
                 };
 
-                layer_rule = [
-                  # layer rules - mainly to disable animations within slurp and grim
-                  {
-                    match = {namespace = "selection";};
+                layer_rule =
+                  [
+                    # layer rules - mainly to disable animations within slurp and grim
+                    {
+                      match = {namespace = "selection";};
+                      no_anim = true;
+                    }
+                  ]
+                  ++ lib.optional (config.mods.wm.suite == "noctalia" && config.mods.noctalia.enable) {
+                    match = {namespace = "^noctalia-(bar-.+|notification|dock|panel|attached-panel|osd|window-switcher)$";};
                     no_anim = true;
-                  }
-                ];
+                  };
 
                 workspace_rule = mkWorkspace config.mods.wm.workspaces;
                 monitor = mkMonitors config.mods.wm.monitors;

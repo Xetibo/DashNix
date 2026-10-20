@@ -120,7 +120,12 @@
           {
             class = "popup-button";
             label = "";
-            on_click = "!oxidash";
+            on_click =
+              if config.mods.wm.suite == "oxi" && config.mods.oxi.enable && config.mods.oxi.oxibar.enable
+              then "!${config.programs.oxibar.package}/bin/oxibar control-center toggle"
+              else if config.mods.wm.suite == "noctalia" && config.mods.noctalia.enable
+              then "!noctalia msg panel-toggle control-center"
+              else "!oxidash";
             type = "button";
           }
         ];

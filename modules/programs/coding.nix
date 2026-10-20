@@ -509,7 +509,6 @@ in {
       plantuml
       d-spy
       tmux
-      tmate
       inputs.compose.packages.${system}.default
     ];
   in

@@ -19,7 +19,10 @@
 
     sops-nix.url = "github:Mic92/sops-nix";
 
-    hyprland.url = "github:hyprwm/Hyprland";
+    # v0.56.2 supplies the matching Home Manager module.
+    hyprland.url = "github:hyprwm/Hyprland/efb50993780079460b0cbed1363e2166a2de1d9f";
+    # Unoverlaid release packages retain cache.nixos.org derivation hashes.
+    hyprland-release.url = "github:NixOS/nixpkgs/c59305bab2065cfecc4944690d9eedbb56f3a9fa";
 
     ironbar = {
       url = "github:JakeStanger/ironbar";
@@ -35,11 +38,15 @@
     anyrun.url = "github:Kirottu/anyrun";
     oxicalc.url = "github:Xetibo/OxiCalc";
     oxishut.url = "github:Xetibo/OxiShut";
-    oxibar.url = "github:Xetibo/OxiBar?ref=wip";
+    oxibar.url = "github:Xetibo/OxiBar/c2dbc96cb63fd3fa3c6d49abc8e771ef38d8d806";
     oxidash.url = "github:Xetibo/OxiDash";
     oxipaste.url = "github:Xetibo/OxiPaste";
     oxirun.url = "github:Xetibo/OxiRun";
     dashvim.url = "github:Xetibo/DashVim";
+
+    # cachix branch always points at the latest cached commit; do not add
+    # nixpkgs.follows here, it would change derivations and break the cache.
+    noctalia.url = "github:noctalia-dev/noctalia/cachix";
 
     nix-gaming.url = "github:fufexan/nix-gaming";
 
@@ -50,6 +57,11 @@
     superfreq.url = "github:NotAShelf/superfreq";
 
     compose.url = "github:garnix-io/nixos-compose";
+  };
+
+  nixConfig = {
+    extra-substituters = ["https://hyprland.cachix.org" "https://noctalia.cachix.org"];
+    extra-trusted-public-keys = ["hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=" "noctalia.cachix.org-1:pCOR47nnMEo5thcxNDtzWpOxNFQsBRglJzxWPp3dkU4="];
   };
 
   outputs = {self, ...} @ inputs: let

@@ -6,13 +6,13 @@
 }: {
   options.mods.oxi.oxipaste = {
     enable = lib.mkOption {
-      default = true;
-      example = false;
+      default = false;
+      example = true;
       type = lib.types.bool;
-      description = "Enables and configures oxipaste";
+      description = "Enables standalone OxiPaste and its clipboard daemon. Mod+A uses Oxibar's picker when the shell clipboard is enabled.";
     };
   };
-  config = lib.mkIf (config.mods.oxi.oxipaste.enable && config.mods.oxi.enable) (
+  config = lib.mkIf (config.mods.oxi.oxipaste.enable && config.mods.oxi.enable && config.mods.wm.suite == "oxi") (
     lib.optionalAttrs (options ? xdg.configFile) {
       programs.oxipaste.enable = true;
       xdg.configFile."oxipaste/style.css" = {

@@ -7,10 +7,10 @@
 }: {
   options.mods.hypr.hyprlock = {
     enable = lib.mkOption {
-      default = true;
+      default = config.mods.wm.suite != "oxi";
       example = false;
       type = lib.types.bool;
-      description = "Enables Hyprlock";
+      description = "Enables Hyprlock. The Oxi suite uses OxiLock by default.";
     };
     config = lib.mkOption {
       default = {

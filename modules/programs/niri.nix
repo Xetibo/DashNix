@@ -240,7 +240,7 @@ in {
               cfg.mods.wm.windowRules.niri
               ++ (
                 if cfg.mods.wm.useDefaultWindowRules
-                then defaultWmConf.defaultWindowRules.niri
+                then (defaultWmConf.defaultWindowRules cfg).niri
                 else []
               )
             )
@@ -290,9 +290,11 @@ in {
             if config.mods.wm.startup ? all
             then config.mods.wm.startup.all ++ config.mods.wm.startup.niri
             else config.mods.wm.startup;
-          autoStart = userStartup ++ defaultStartup.all ++ defaultStartup.niri;
+          # Filter disabled ("") entries like the hyprland backend does;
+          # otherwise niri gets `spawn-at-startup ""` lines.
+          autoStart = builtins.filter (s: s != "") (userStartup ++ defaultStartup.all ++ defaultStartup.niri);
         in
-          (builtins.map (value: "spawn-at-startup \"${value}\"")
+          (builtins.map (value: "spawn-at-startup \"${pkgs.runtimeShell}\" \"-c\" ${builtins.toJSON value}")
             autoStart)
           |> lib.strings.concatLines;
         defaultConfig =

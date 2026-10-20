@@ -13,13 +13,13 @@
 in {
   options.mods.oxi.oxidash = {
     enable = lib.mkOption {
-      default = true;
-      example = false;
+      default = false;
+      example = true;
       type = lib.types.bool;
-      description = "Enables and configures oxidash";
+      description = "Enables standalone OxiDash instead of the Oxibar control-center shortcut.";
     };
   };
-  config = lib.mkIf (config.mods.oxi.oxidash.enable && config.mods.oxi.enable) (
+  config = lib.mkIf (config.mods.oxi.oxidash.enable && config.mods.oxi.enable && config.mods.wm.suite == "oxi") (
     lib.optionalAttrs (options ? xdg.configFile) {
       programs.oxidash.enable = true;
       xdg.configFile."oxidash/style.css" = {
