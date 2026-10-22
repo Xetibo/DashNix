@@ -313,6 +313,7 @@ For package lists, please check the individual modules, as the lists can be long
 - plymouth: enable or disable plymouth
 - printing : Enables and configures printing services
 - scripts: Various preconfigured scripts with the ability to add more
+- security: Opt-in desktop and server security presets, reusing the ClamAV module
 - sops: Enables sops-nix
 - starship : Configures the starship prompt
 - stylix : Configures system themes, can also be applied to dashvim if used.
@@ -322,6 +323,139 @@ For package lists, please check the individual modules, as the lists can be long
 - xone : Installs the xone driver
 - yazi: Installs yazi and sets custom keybinds
 - yubikey: Opt-in YubiKey management, smart-card support, and U2F PAM authentication
+
+## Security presets
+
+Enable a preset in the host's shared `configuration.nix`. Security presets are
+opt-in; the existing `mods.clam` options remain available independently.
+
+```nix
+mods.security = {
+  enable = true;
+  preset = "desktop"; # Use "server" for the server defaults.
+};
+```
+
+Both presets enable the stateful inbound firewall and refused-connection logging,
+kernel hardening defaults, auditd with a write/attribute watch on `/etc`, bounded
+persistent journals, and scheduled ClamAV scans. Nix builds use the sandbox and
+require signatures; only `root` is a trusted Nix user by default. Ordinary users
+can still build through the daemon, but privileged daemon settings and arbitrary
+cache overrides require administrator configuration.
+
+| Default | Desktop | Server |
+| --- | --- | --- |
+| ClamAV schedule | Sunday at 12:00 | Daily at 04:00 |
+| Maximum ClamAV worker threads | 2 | 4 |
+| OpenSnitch daemon and graphical-session UI | Enabled | Disabled |
+| ClamTK GUI | Installed | Disabled |
+| AppArmor support | Disabled | Enabled |
+| Existing SSH server | Native authentication settings | Key-only, no root login, X11 or agent forwarding |
+| Fail2ban | Disabled | Enabled; SSH jail follows OpenSSH enablement and ports |
+| Journal disk limit | 512 MiB | 1 GiB |
+
+Scan timers catch missed runs after startup and add up to 15 minutes of random
+delay. ClamAV's daemon and scheduled client run with lower scheduling weights.
+Scans report detections without deleting or quarantining files. The presets set
+256 MiB per-file and 1 GiB expanded-data limits, 100,000 archive entries, recursion
+depth 30, and a five-minute per-file scan limit. Limit alerts indicate incomplete
+inspection, not necessarily malware. Scheduled scanning is separate from
+ClamAV's optional on-access scanning.
+
+The default scan roots remain `/home`, `/var/lib`, `/tmp`, `/etc`, and `/var/tmp`.
+Add existing data mounts, uploads, or application directories through the existing
+API, and choose a schedule appropriate for their size:
+
+```nix
+mods.clam.scanner = {
+  interval = "Sat *-*-* 10:00:00";
+  scanDirectories = ["/home" "/var/lib" "/etc" "/tmp" "/var/tmp" "/drive2"];
+};
+```
+
+Use existing absolute paths without whitespace: the upstream scheduled scanner
+currently joins its path arguments without quoting. Review scan summaries for
+errors and limit alerts; encrypted files and VM disks need their own checks.
+
+### Desktop outbound firewall
+
+OpenSnitch prompts for application connections. Its UI starts with the user's
+Home Manager graphical session; allow the applications and background services
+you need. The default process monitor is `proc`, avoiding an extra eBPF kernel
+module on custom kernels. Nix package updates can change executable paths and
+require rule maintenance. Configure rules with `services.opensnitch.rules` in
+`hardware.nix`, or disable the daemon and UI together in `configuration.nix`:
+
+```nix
+mods.security.opensnitch.enable = false;
+```
+
+Standalone Home Manager can configure the UI and ClamTK only; a system
+administrator must enable the associated daemons and system policy.
+
+### Server access and confinement
+
+Select `preset = "server"` in `configuration.nix`. Configure server services and
+desktop selection separately. To enable SSH, place the administrator's public key
+in `admin.pub`, then configure the NixOS-only `hardware.nix`:
+
+```nix
+{config, ...}: {
+  services.openssh.enable = true;
+  users.users.${config.conf.username}.openssh.authorizedKeys.keyFiles = [./admin.pub];
+}
+```
+
+Before applying the key-only SSH policy remotely, ensure the non-root
+administrator can log in with that key and has working sudo access; keep a
+recovery session or console available. The preset hardens SSH when it is
+enabled. Fail2ban follows custom SSH ports; configure additional application
+jails explicitly. Patching exposed services and restricting server-to-client
+network access remain essential against application RCE.
+
+On new installations, replace DashNix's `firstlogin` bootstrap password before
+exposing the host. The security preset does not rotate existing passwords or
+remove administrator/container groups; review those privileges for the server.
+
+AppArmor enablement installs the LSM/profile-loading infrastructure. Add and test
+workload-specific `security.apparmor.policies`; enabling support alone does not
+confine every application. Reboot to load the LSM, and ensure custom kernels and
+explicit `security.lsm` overrides include AppArmor.
+
+### Overrides and checks
+
+Feature toggles include `audit.enable`, `apparmor.enable`, `opensnitch.enable`,
+`opensnitch.ui.enable`, `ssh.enable`, `fail2ban.enable`, and `tools.enable` under
+`mods.security`. Existing `mods.clam.enable`, `mods.clam.gui.enable`, and scanner
+settings override preset defaults. Native NixOS options in `hardware.nix` also
+take precedence through `mkDashDefault`, for example:
+
+```nix
+services.clamav.daemon.settings.MaxThreads = 1;
+services.clamav.scanner.enable = false;
+services.journald.settings.Journal.SystemMaxUse = "2G"; # Unstable nixpkgs API.
+```
+
+On stable nixpkgs, journal settings use `services.journald.storage` and
+`services.journald.extraConfig`. Both APIs are supported by the preset.
+Presets retain service-opened firewall ports; review those services and restrict
+them to the appropriate interfaces or networks. Configure passwords and tokens
+through runtime secret files rather than literal Nix values or command arguments:
+the store is readable, and journals/audit records can retain command arguments.
+
+Lynis and vulnix are installed for manual reviews:
+
+```sh
+systemctl list-timers clamdscan.timer
+journalctl -u clamdscan.service
+sudo ausearch -k system_configuration -ts today
+sudo lynis audit system --quick
+vulnix --system
+```
+
+Lynis reviews hardening; vulnix flags possible vulnerable package versions and
+needs verification of backports and false positives. Keep the consumer flake and
+application dependencies updated alongside these checks.
 
 ## YubiKey
 

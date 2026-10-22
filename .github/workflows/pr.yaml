@@ -31,5 +31,7 @@ jobs:
         run: nix run --no-write-lock-file github:${{ github.repository }}/${{ github.sha }}#lint -- check
       - name: Format check
         run: nix run --no-write-lock-file github:${{ github.repository }}/${{ github.sha }}#format -- --check .
+      - name: Security preset check
+        run: nix build --no-link --no-write-lock-file github:${{ github.repository }}/${{ github.sha }}#checks.x86_64-linux.security
       - name: Build docs
         run: nix -L build github:${{ github.repository }}/${{ github.sha }}#docs --no-write-lock-file

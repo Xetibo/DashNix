@@ -1,10 +1,12 @@
 # Testing
 
-- CI runs Statix, checks Alejandra formatting, and builds documentation through flake outputs.
+- CI runs Statix, checks Alejandra formatting, verifies security presets, and builds documentation through flake outputs.
 - Evaluate affected NixOS and Home Manager options before attempting expensive system builds.
 - When the known `superfreq`/nixpkgs `services.watt` duplicate blocks evaluation, focused desktop checks can disable `services/hardware/watt.nix` in a temporary `extendModules` harness. This does not verify a complete system build.
 - For shell-suite changes, evaluate both module scopes for `oxi`, `noctalia`, and `none`, including disabled shell/locker/greetd and user-setting overrides. Check startup commands, bindings, session packages, PAM policy, and that only one sleep watcher is generated.
 - Local checks use `path:.` to include new untracked modules and the deliberately synchronized ignored lock. Run `nix run path:.#lint -- check`, `nix run path:.#format -- --check .`, and `nix build path:.#docs --no-link --no-write-lock-file` (with `pipe-operators` enabled).
+- Run `nix build path:.#checks.x86_64-linux.security --no-link --no-write-lock-file --extra-experimental-features pipe-operators` for focused stable/unstable policy checks and Home Manager GUI integration. These cover opt-in/disabled behavior, SSH/jail coupling, native overrides, scan timer persistence, bounded logs, and absence of disabled scan units. A limited framework-example check verifies legacy and preset Nix trust behavior with the known `services.watt` duplicate disabled; it is not a full system build.
+- After deploying security-policy changes on a test host, verify `systemctl list-timers clamdscan.timer`, a completed scanner summary, audit rules/events, actual SSH key access, firewall behavior, and enabled AppArmor profiles. Confirm custom kernels load the requested LSMs after reboot; evaluation alone cannot verify enforcement.
 - Verify binary-cache compatibility by comparing system and Home Manager package derivation paths with the exact pinned, unoverlaid nixpkgs input.
 - Use `nix build --dry-run` with the relevant substituter enabled to distinguish cache downloads from local builds.
 - Fetch compositor, portal, and Mesa with `nix build --no-link --max-jobs 0` to prove they require no local source builds.

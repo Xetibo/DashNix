@@ -7,3 +7,4 @@
 - Shell, lockscreen, and login screen use the same palette and sans-serif font. Authentication wallpapers reference immutable Nix store assets; administrator-owned greeter settings never read the user's shell overrides.
 - Prefer resident shell surfaces and IPC actions over launching duplicate panels or docks. Audio and brightness keys use shell actions so their OSD feedback stays consistent.
 - Preserve host-specific layouts and existing theme conventions when changing shared desktop configuration.
+- Interactive service frontends run in the user's graphical session, with daemon policy owned by NixOS. Headless configurations must not depend on approval dialogs.

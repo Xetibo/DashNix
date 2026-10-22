@@ -96,7 +96,7 @@ in {
       options = mkDashDefault "--delete-older-than 7d --delete-generations +5";
     };
     settings = {
-      trusted-users = [username];
+      trusted-users = lib.mkIf (!config.mods.security.enable) [username];
       auto-optimise-store = mkDashDefault true;
 
       builders-use-substitutes = mkDashDefault true;

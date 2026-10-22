@@ -2,6 +2,9 @@
 
 - `flake.lock` is ignored by Git in this framework repository; consumer flakes own their tracked dependency locks. Explicit source revision pins are needed for components that must survive broad input updates.
 - Full system builds involve many third-party inputs and can fail independently of the desktop compositor.
+- Policy evaluation checks do not replace deployment tests of firewall prompts, remote access, audit loading, or application confinement. AppArmor requires workload-specific profiles and a compatible running kernel/LSM configuration.
+- The base user retains the public `firstlogin` bootstrap password and broad administrator/container groups. Production hosts need explicit credential and privilege management; security presets do not rotate accounts or remove those grants.
+- The upstream scheduled ClamAV unit joins scan roots without quoting; paths containing whitespace need a customized unit until this is corrected upstream.
 - Current nixpkgs and the standalone `superfreq` module both declare `services.watt`; full service/configuration evaluation fails with duplicate options until that input integration is reconciled.
 - The standalone `buildHome` helper passes priority-wrapped `pkgs` directly to Home Manager, failing before module evaluation. Standalone module checks need a direct Home Manager configuration with an unwrapped package set until the helper is corrected.
 - Hyprland plugins from a different package set may not match the pinned compositor ABI; plugin compatibility requires separate verification when enabled.

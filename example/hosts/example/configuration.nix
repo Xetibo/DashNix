@@ -34,6 +34,8 @@
     ];
     gpu.nvidia.enable = true;
     kdeConnect.enable = true;
+    # Security presets are opt-in: "desktop" or "server".
+    # security = { enable = true; preset = "desktop"; };
     # YubiKey management and U2F PAM authentication are opt-in.
     # yubikey.enable = true;
     # yubikey.pam.enable = false; # Keep PAM disabled during initial key enrollment.

@@ -40,6 +40,7 @@
     ./printing.nix
     ./scripts.nix
     ./sddm.nix
+    ./security.nix
     ./sops.nix
     ./starship.nix
     ./streamcontroller.nix

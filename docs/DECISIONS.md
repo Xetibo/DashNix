@@ -3,6 +3,13 @@
 Log of notable design decisions for LLM continuity. Keep entries concise; do
 not duplicate component-specific details that live in module code or docs.
 
+## 2026-10-22: Opt-in desktop and server security presets
+
+- Add `mods.security.enable` (default false) and `preset = "desktop" | "server"`, preserving the existing `mods.clam` API. Both presets enable catch-up scan timers, bounded logging, targeted auditd records, firewall logging, conservative sysctls, and root-only Nix daemon trust. The base's legacy user trust grant applies only without a security preset.
+- Desktop adds OpenSnitch with a graphical-session UI and a custom-kernel-compatible `proc` monitor, plus weekly/two-thread ClamAV scans. Server uses daily/four-thread scans, disables ClamTK by default, enables AppArmor support and Fail2ban, and hardens an already-enabled SSH service without enabling it itself. AppArmor profiles and application-specific jails remain host-owned.
+- Use `mkDashDefault` for native defaults and actual native enable flags for unit/timer additions. Expose ClamTK and timer persistence controls in the existing ClamAV module. Put shared preset selections in `configuration.nix` and native system overrides in `hardware.nix`.
+- Add a focused flake check for both pinned NixOS channels and direct Home Manager scope, plus a framework-example trust regression check with the known `services.watt` duplicate disabled. Runtime enforcement and remote-access recovery still require deployment checks.
+
 ## 2026-10-15: Opt-in YubiKey and PAM module
 
 - Add `mods.yubikey` in `modules/programs/yubikey.nix`, disabled by default and imported with the shared program modules. System settings are emitted only in NixOS scope.

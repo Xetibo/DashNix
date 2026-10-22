@@ -99,6 +99,11 @@
     };
     lint = inputs.statix.packages.${currentSystem}.default;
     format = unstable.alejandra;
+    checks.${currentSystem}.security = import ./tests/security.nix {
+      inherit inputs;
+      pkgs = unstable;
+      system = currentSystem;
+    };
     dashNixInputs = inputs;
     stablePkgs = stable;
     unstablePkgs = unstable;
