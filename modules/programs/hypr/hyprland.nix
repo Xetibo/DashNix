@@ -98,6 +98,24 @@ in {
       services.hyprpaper.enable = true;
     }
     // lib.optionalAttrs (options ? wayland.windowManager.hyprland) {
+      assertions = let
+        cfg = config.wayland.windowManager.hyprland;
+        matches = package: expected: package == null || package.drvPath == expected.drvPath;
+        compatiblePlugin = plugin:
+          lib.isDerivation plugin
+          && (plugin.stdenv.cc.libc.outPath or null) == hyprlandPkgs.stdenv.cc.libc.outPath
+          && lib.any (dependency: lib.isDerivation dependency && dependency.drvPath == hyprlandPkgs.hyprland.drvPath) (plugin.buildInputs or []);
+      in [
+        {
+          assertion = matches cfg.package hyprlandPkgs.hyprland && matches cfg.portalPackage hyprlandPkgs.xdg-desktop-portal-hyprland;
+          message = "DashNix Home Manager Hyprland and its portal must match lib/hyprland-packages.nix (or be null to use the system packages).";
+        }
+        {
+          assertion = lib.all compatiblePlugin cfg.plugins;
+          message = "DashNix Hyprland plugins must be built against the exact pinned compositor and libc; use the shared release package set's hyprlandPlugins scope.";
+        }
+      ];
+
       # install Hyprland related packages
       home.packages = with pkgs; [
         xprop
@@ -370,7 +388,7 @@ in {
         portalPackage = hyprlandPkgs.xdg-desktop-portal-hyprland;
         plugins =
           [
-            (lib.mkIf config.mods.hypr.hyprland.hyprspaceEnable pkgs.hyprlandPlugins.hyprspace)
+            (lib.mkIf config.mods.hypr.hyprland.hyprspaceEnable hyprlandPkgs.hyprlandPlugins.hyprspace)
           ]
           ++ config.mods.hypr.hyprland.plugins;
         settings =

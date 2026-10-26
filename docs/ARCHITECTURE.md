@@ -1,12 +1,15 @@
 # Architecture
 
 - DashNix is a Nix flake providing reusable NixOS and Home Manager modules.
+- The public `unstable` input tracks `nixos-unstable-small` for faster channel promotion, supplying the default system/module/package set and the `unstablePkgs` output. Consumer input follows and package bundles can override it. Release-pinned graphics and cache-sensitive upstream dependency graphs remain independent.
 - `lib/default.nix` exposes `dashNixLib.buildSystems` and `buildHome`, combining framework inputs with consumer host directories and package bundles.
 - Shared system defaults live in `base/`, Home Manager defaults in `home/`, and configurable features in `modules/`.
 - Opt-in role presets compose existing feature modules. System policy belongs to NixOS; graphical helpers belong to Home Manager. Preset defaults remain overridable through native options, including the base layer's Nix daemon trust policy.
 - `example/` provides a consumer flake; `iso/` provides the installer image.
 - Hyprland's module/source input is pinned to a release. Runtime compositor, portal, and graphics packages come from a separate revision-pinned, unoverlaid nixpkgs input via `lib/hyprland-packages.nix`, preserving official binary-cache derivations independently of consumer overlays and updates.
 - The user session, Home Manager, installer, and OxiSession Hyprland kiosk share this package selection; Noctalia retains its upstream kiosk package. Mesa and userspace graphics drivers must use the compositor's package set because they are loaded into its process and depend on its libc ABI.
+- A shared NixOS runtime module enforces the pinned compositor/portal/Mesa selections, graphics-driver libc compatibility, and NVIDIA userspace/kernel-build agreement. NVIDIA userspace and automatically added EGL/VA-API helpers use the release package set; kernel modules retain the configured host kernel's build scope and compiler. Home Manager verifies compositor, portal, and plugin build compatibility separately.
+- Capability-bearing compositor launchers remain native ELF throughout their execution chain, retaining required runtime tools without rebuilding the cached compositor or bypassing NixOS wrapper-integrity checks.
 - Consumer flakes maintain their own lock graph and must configure build-time caches at the root; dependency `nixConfig` is not inherited.
 - `mods.wm.suite` (`oxi`/`noctalia`/`none`, default `oxi`) selects the desktop shell suite for niri and Hyprland. Oxi uses the resident Oxibar shell, OxiLock, and OxiSession; standalone Oxi apps are opt-in except compositor-independent OxiCalc. Noctalia uses its upstream home module and nixpkgs NixOS integration.
 - Authentication crosses a system/user boundary: NixOS owns greetd, its dedicated greeter user, session packages, and locker PAM policy; Home Manager owns shell settings, locker appearance, and the single per-user sleep watcher. Standalone Home Manager cannot install system PAM policy. Hardware-backed PAM authentication is opt-in, with enrollment data managed outside the Nix store.

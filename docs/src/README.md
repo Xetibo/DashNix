@@ -11,12 +11,16 @@ An opinionated flake to bootstrap NixOS systems with default configurations for 
 This flake is intended to be used as an input to your own NixOS configuration:
 
 ```nix
-dashNix = {
-  url = "github:Xetibo/DashNix";
-  inputs = {
-    # ensure these are here to update the packages on your own
-    nixpkgs.follows = "nixpkgs";
-    stable.follows = "stable";
+inputs = {
+  unstable.url = "github:NixOs/nixpkgs/nixos-unstable-small";
+  stable.url = "github:NixOs/nixpkgs/nixos-26.05";
+  dashNix = {
+    url = "github:Xetibo/DashNix";
+    inputs = {
+      # Keep package updates under your consumer flake's control.
+      unstable.follows = "unstable";
+      stable.follows = "stable";
+    };
   };
 };
 ```
@@ -163,6 +167,10 @@ Here is a minimal required configuration.nix (the TODOs mention a required chang
 After logging in the first time, your password will be set to "firstlogin", please change this to whatever you like.
 
 ## Configuring pkgs
+
+DashNix's `unstable` input defaults to `nixos-unstable-small`, including the system, kernel, and security-service package defaults. This channel exposes the full nixpkgs package set but advances after a smaller set of builds and tests, allowing security fixes to reach it sooner. Fewer binaries are available than on `nixos-unstable`, especially for GUI applications, so some packages may need source builds.
+
+Consumer flakes control their own lockfiles: update the selected input and rebuild to receive newer revisions. Existing `unstable`, `unstablePkgs`, and `unstableBundle` names are unchanged. An explicit `unstableBundle.pkgs` or `dashNix.inputs.unstable.follows` still selects the consumer's package source. The separately pinned Hyprland/graphics packages and cache-sensitive upstream package graphs retain their own revisions.
 
 While DashNix offers a default pkgs config, you may want to permit an unsecure packages,
 add additional modules/inputs, or add an overlay to them.

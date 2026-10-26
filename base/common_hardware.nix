@@ -40,7 +40,6 @@ in {
 
     kernelPackages = mkDashDefault pkgs.linuxPackages_latest;
     initrd = {
-      verbose = mkDashDefault false;
       availableKernelModules = [
         "nvme"
         "xhci_pci"

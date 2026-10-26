@@ -9,7 +9,10 @@
   system = "x86_64-linux";
   graphicsPkgs = import ../lib/hyprland-packages.nix {inherit inputs system;};
 in {
-  imports = ["${modulesPath}/installer/cd-dvd/iso-image.nix"];
+  imports = [
+    "${modulesPath}/installer/cd-dvd/iso-image.nix"
+    ../lib/hyprland-runtime.nix
+  ];
   nixpkgs.hostPlatform = {
     inherit system;
   };

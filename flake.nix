@@ -2,7 +2,8 @@
   description = "DashNix";
 
   inputs = {
-    unstable.url = "github:NixOs/nixpkgs/nixos-unstable";
+    # Smaller build gates promote security fixes sooner than nixos-unstable.
+    unstable.url = "github:NixOs/nixpkgs/nixos-unstable-small";
     stable.url = "github:NixOs/nixpkgs/nixos-26.05";
     nixos-wsl.url = "github:nix-community/NixOS-WSL/main";
     nur.url = "github:nix-community/NUR";
@@ -99,10 +100,17 @@
     };
     lint = inputs.statix.packages.${currentSystem}.default;
     format = unstable.alejandra;
-    checks.${currentSystem}.security = import ./tests/security.nix {
-      inherit inputs;
-      pkgs = unstable;
-      system = currentSystem;
+    checks.${currentSystem} = {
+      security = import ./tests/security.nix {
+        inherit inputs;
+        pkgs = unstable;
+        system = currentSystem;
+      };
+      hyprland = import ./tests/hyprland.nix {
+        inherit inputs;
+        pkgs = unstable;
+        system = currentSystem;
+      };
     };
     dashNixInputs = inputs;
     stablePkgs = stable;

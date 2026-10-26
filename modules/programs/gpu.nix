@@ -84,7 +84,7 @@ in {
         modesetting.enable = mkDashDefault true;
         open = mkDashDefault true;
         nvidiaSettings = mkDashDefault true;
-        package = mkDashDefault config.boot.kernelPackages.nvidiaPackages.beta;
+        package = lib.mkIf (!config.programs.hyprland.enable) (mkDashDefault config.boot.kernelPackages.nvidiaPackages.beta);
       };
       graphics = let
         amdPackages = [

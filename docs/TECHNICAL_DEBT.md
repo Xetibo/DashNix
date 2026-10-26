@@ -1,13 +1,15 @@
 # Technical Debt
 
 - `flake.lock` is ignored by Git in this framework repository; consumer flakes own their tracked dependency locks. Explicit source revision pins are needed for components that must survive broad input updates.
+- `nixos-unstable-small` promotes after fewer builds/tests and does not guarantee binaries for the full package set, particularly GUI applications. Consumers must update their own selected input locks and rebuild to receive fixes; channel selection alone does not update deployed systems.
 - Full system builds involve many third-party inputs and can fail independently of the desktop compositor.
+- The installer sets `networking.wireless.enable = false` while NetworkManager sets it to `true`, blocking ISO evaluation on both the previous unstable lock and the small-channel revision. Full example evaluation also encounters an upstream editor input using the removed `typescript-go` alias; these pre-existing blockers limit end-to-end channel verification.
 - Policy evaluation checks do not replace deployment tests of firewall prompts, remote access, audit loading, or application confinement. AppArmor requires workload-specific profiles and a compatible running kernel/LSM configuration.
 - The base user retains the public `firstlogin` bootstrap password and broad administrator/container groups. Production hosts need explicit credential and privilege management; security presets do not rotate accounts or remove those grants.
 - The upstream scheduled ClamAV unit joins scan roots without quoting; paths containing whitespace need a customized unit until this is corrected upstream.
 - Current nixpkgs and the standalone `superfreq` module both declare `services.watt`; full service/configuration evaluation fails with duplicate options until that input integration is reconciled.
 - The standalone `buildHome` helper passes priority-wrapped `pkgs` directly to Home Manager, failing before module evaluation. Standalone module checks need a direct Home Manager configuration with an unwrapped package set until the helper is corrected.
-- Hyprland plugins from a different package set may not match the pinned compositor ABI; plugin compatibility requires separate verification when enabled.
+- Custom compositor plugins and graphics drivers must expose compatible build metadata; opaque plugin paths and drivers without matching libc metadata or a verified pinned-output identity are rejected. These guards do not establish hardware support or replace deployment tests.
 - Binary-cache availability depends on upstream CI publishing the exact derivation, not just matching the source version.
 - Upstream Hyprland release v0.56.2's flake compositor was absent from its Cachix cache when checked; the runtime uses the cached official nixpkgs release instead.
 - An ignored framework `flake.lock` can override a consumer's nested locks when using a local path input. Keep it absent or deliberately synchronized rather than introducing stale unrelated dependency revisions.

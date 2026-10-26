@@ -2,12 +2,12 @@
   description = "some dots";
 
   inputs = {
-    nixpkgs.url = "github:NixOs/nixpkgs/nixos-unstable";
+    unstable.url = "github:NixOs/nixpkgs/nixos-unstable-small";
     stable.url = "github:NixOs/nixpkgs/nixos-24.05";
     dashNix = {
       url = "github:Xetibo/DashNix";
       inputs = {
-        nixpkgs.follows = "nixpkgs";
+        unstable.follows = "unstable";
         stable.follows = "stable";
       };
     };

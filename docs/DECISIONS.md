@@ -3,6 +3,28 @@
 Log of notable design decisions for LLM continuity. Keep entries concise; do
 not duplicate component-specific details that live in module code or docs.
 
+## 2026-10-26: ROCm ICD compatibility without compiler libc metadata
+
+- The graphics guard rejected the already-pinned `rocmPackages.clr.icd` during an AMD/ROCm rebuild. Its custom ROCm sysroot compiler does not expose `stdenv.cc.libc`; missing metadata was not evidence of a package-set mismatch.
+- Accept only the exact pinned native ICD output as an alternative to libc metadata. Host-derived ICDs and the native ICD in the 32-bit driver environment remain rejected. Preserve the cached ROCm derivation and compiler.
+- Cover ROCm-enabled AMD configurations on both channels and negative ICD/package-architecture cases. Verify the consumer `spaceship` system derivation with the fixed local DashNix input without changing its dependency lock or activating a generation.
+
+## 2026-10-26: ELF-safe Hyprland capabilities and enforced graphics agreement
+
+- Current NixOS wraps Hyprland with `cap_sys_nice`, but cached nixpkgs 0.56.2 exposes a shell wrapper at `bin/Hyprland`. Keep NixOS's capability and integrity checks; build a small native launcher around the cached `bin/.Hyprland-wrapped` payload, preserving its binutils/Qt utilities/PCI/pkgconf PATH suffix. Do not rebuild the compositor or grant capabilities to a shell script.
+- Import the unchanged release package set with unfree packages allowed for NVIDIA. Build its driver userspace with the release stdenv while deriving open/closed kernel modules from the actual host kernel's scope. Normalize NixOS's automatically added EGL and VA-API helpers to the same release, retaining its version-specific EGL priority adjustments.
+- Reject inconsistent compositor/portal/Mesa derivations, native/32-bit graphics libc, NVIDIA userspace/module versions and exact kernel build paths. Build the built-in Hyprspace plugin against the pinned compositor; Home Manager rejects mismatched compositor/portal packages and plugin build metadata. Null Home Manager packages can still reuse system selections.
+- Apply the shared NixOS runtime module through the base and installer imports; keep Home Manager assertions in its existing module scope. Extend merged graphics options with `apply` to normalize upstream-added helpers without replacing host `pkgs` or its kernel toolchain.
+- Add a CI flake check for both channels, deliberate mismatch failures, real wrapper-integrity execution, ELF headers, and a cleared-environment launcher `--version` smoke test. Full activation/rendering remains a host-level check; existing full-system/installer evaluation blockers remain tracked separately.
+
+## 2026-10-24: Faster unstable channel promotion
+
+- Point the existing `unstable` input at `nixos-unstable-small` so default host, kernel, security-service, Home Manager, installer, and tooling package selections follow the faster-promoting channel together. Preserve the public input/output and bundle names and existing consumer overrides instead of mixing core packages across nixpkgs revisions.
+- The small channel still exposes all nixpkgs packages; its smaller required build/test set trades binary coverage for faster updates. Keep release-pinned Hyprland/graphics and independent upstream cache graphs intact.
+- Match CI's fallback channel and the example consumer to the new default. Correct the example/documented follows edge to `unstable`, matching both DashNix's input and `unstableBundle.pkgs`. Framework locks remain ignored and consumer-owned.
+- The newer revision removes scripted initrd options. Drop the obsolete `boot.initrd.verbose` default; existing quiet kernel arguments and console log level continue to apply.
+- Broader evaluation reproduced the installer's wireless/NetworkManager conflict and an upstream editor's removed `typescript-go` alias on the previous unstable revision; track them as existing verification blockers.
+
 ## 2026-10-22: Opt-in desktop and server security presets
 
 - Add `mods.security.enable` (default false) and `preset = "desktop" | "server"`, preserving the existing `mods.clam` API. Both presets enable catch-up scan timers, bounded logging, targeted auditd records, firewall logging, conservative sysctls, and root-only Nix daemon trust. The base's legacy user trust grant applies only without a security preset.
