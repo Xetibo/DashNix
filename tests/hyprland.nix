@@ -37,6 +37,24 @@
     mods.gpu.nvidia.enable = true;
     boot.kernelPackages = pkgs.linuxPackages_latest;
   };
+  withoutNativeWrapper = {lib, ...}: {
+    disabledModules = ["programs/wayland/hyprland.nix"];
+    options.programs.hyprland = {
+      enable = lib.mkEnableOption "Hyprland";
+      package = lib.mkOption {type = lib.types.package;};
+      portalPackage = lib.mkOption {type = lib.types.package;};
+    };
+  };
+  validWrapper = config: let
+    wrapper = config.security.wrappers.Hyprland;
+  in
+    wrapper.enable
+    && wrapper.owner == "root"
+    && wrapper.group == "root"
+    && wrapper.capabilities == "cap_sys_nice+ep"
+    && !wrapper.setuid
+    && !wrapper.setgid
+    && wrapper.source == desktop.security.wrappers.Hyprland.source;
   channelChecks = name: nixpkgs: let
     host = import nixpkgs {
       inherit system;
@@ -59,22 +77,33 @@
       programs.hyprland.enable = false;
       mods.gpu.nvidia.enable = true;
     };
+    standaloneWrapper = evaluate nixpkgs {imports = [withoutNativeWrapper];};
+    customWrapper = evaluate nixpkgs {
+      imports = [withoutNativeWrapper];
+      security.wrappers.Hyprland = {
+        capabilities = "";
+        permissions = "u+rx";
+      };
+    };
   in [
     (check "${name}: AMD/Intel graphics share the cached compositor stack" (passes graphics))
     (check "${name}: enabling ROCm accepts the pinned OpenCL ICD and graphics stack" (
       passes rocm
       && lib.any (package: toString package == toString release.rocmPackages.clr.icd) rocm.hardware.graphics.extraPackages
     ))
-    (check "${name}: capability wrapper keeps root ownership, cap_sys_nice and the native launcher" (
-      graphics.security.wrappers.Hyprland.owner
+    (check "${name}: capability wrapper keeps root ownership, cap_sys_nice and the native launcher" (validWrapper graphics))
+    (check "${name}: wrapper is complete without native Hyprland wrapper defaults" (validWrapper standaloneWrapper))
+    (check "${name}: native wrapper restrictions override framework defaults" (
+      customWrapper.security.wrappers.Hyprland.owner
       == "root"
-      && graphics.security.wrappers.Hyprland.group == "root"
-      && graphics.security.wrappers.Hyprland.capabilities == "cap_sys_nice+ep"
-      && graphics.security.wrappers.Hyprland.source == desktop.security.wrappers.Hyprland.source
+      && customWrapper.security.wrappers.Hyprland.group == "root"
+      && customWrapper.security.wrappers.Hyprland.capabilities == ""
+      && customWrapper.security.wrappers.Hyprland.permissions == "u+rx"
     ))
     (check "${name}: NVIDIA userspace, EGL helpers, VA-API and both architectures agree" (passes proprietary))
     (check "${name}: disabling Hyprland retains native host drivers" (
       passes disabled
+      && !(disabled.security.wrappers ? Hyprland)
       && disabled.hardware.graphics.package.drvPath == host.mesa.drvPath
       && disabled.hardware.nvidia.package.drvPath == disabled.boot.kernelPackages.nvidiaPackages.beta.drvPath
     ))

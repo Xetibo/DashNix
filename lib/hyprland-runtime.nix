@@ -67,7 +67,12 @@
         package = mkDashDefault release.hyprland;
         portalPackage = mkDashDefault release.xdg-desktop-portal-hyprland;
       };
-      security.wrappers.Hyprland.source = lib.mkForce "${launcher}/bin/Hyprland";
+      security.wrappers.Hyprland = {
+        owner = mkDashDefault "root";
+        group = mkDashDefault "root";
+        capabilities = mkDashDefault "cap_sys_nice+ep";
+        source = lib.mkForce "${launcher}/bin/Hyprland";
+      };
       hardware = {
         graphics = {
           package = lib.mkDefault release.mesa;
