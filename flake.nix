@@ -111,6 +111,11 @@
         pkgs = unstable;
         system = currentSystem;
       };
+      ironbar = import ./tests/ironbar.nix {
+        inherit inputs;
+        pkgs = unstable;
+        system = currentSystem;
+      };
     };
     dashNixInputs = inputs;
     stablePkgs = stable;

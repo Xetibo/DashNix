@@ -267,7 +267,7 @@ in {
     };
   };
   config = lib.mkIf (config.mods.ironbar.enable || config.mods.hypr.hyprland.useIronbar) (
-    lib.optionalAttrs (options ? programs.ironbar) {
+    lib.optionalAttrs (options ? programs.ironbar.config) {
       programs.ironbar = {
         package = mkDashDefault pkgs.ironbar;
         enable = true;

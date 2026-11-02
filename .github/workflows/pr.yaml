@@ -35,5 +35,7 @@ jobs:
         run: nix build --no-link --no-write-lock-file github:${{ github.repository }}/${{ github.sha }}#checks.x86_64-linux.security
       - name: Hyprland runtime check
         run: nix build --no-link --no-write-lock-file github:${{ github.repository }}/${{ github.sha }}#checks.x86_64-linux.hyprland
+      - name: Ironbar module scope check
+        run: nix build --no-link --no-write-lock-file github:${{ github.repository }}/${{ github.sha }}#checks.x86_64-linux.ironbar
       - name: Build docs
         run: nix -L build github:${{ github.repository }}/${{ github.sha }}#docs --no-write-lock-file
