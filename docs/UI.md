@@ -8,3 +8,4 @@
 - Prefer resident shell surfaces and IPC actions over launching duplicate panels or docks. Audio and brightness keys use shell actions so their OSD feedback stays consistent.
 - Preserve host-specific layouts and existing theme conventions when changing shared desktop configuration.
 - Interactive service frontends run in the user's graphical session, with daemon policy owned by NixOS. Headless configurations must not depend on approval dialogs.
+- Background reports use the existing desktop notification server, not a second notification daemon. Reserve critical urgency for high-severity or known-exploited advisories; ordinary updates, unknown scores, and check failures use normal urgency. Deduplicate unchanged messages, remind at most daily, and surface stale/missing results rather than claiming success.

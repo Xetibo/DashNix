@@ -5,8 +5,10 @@
 }: let
   inherit (pkgs) lib;
   modules = [
+    ../modules/conf.nix
     ../modules/programs/clam.nix
     ../modules/programs/security.nix
+    ../modules/programs/virtmanager.nix
   ];
   check = name: condition: lib.assertMsg condition "Security preset check failed: ${name}";
   checkNixos = name: nixpkgs: let
@@ -19,6 +21,7 @@
           ++ [
             {
               system.stateVersion = "26.05";
+              users.users.DashNix.isNormalUser = true;
             }
             settings
           ];
@@ -74,6 +77,7 @@
           ssh.enable = false;
           fail2ban.enable = false;
           tools.enable = false;
+          monitor.enable = false;
         };
         clam.enable = false;
       };
@@ -89,6 +93,14 @@
         };
       };
     };
+    virtualization = evaluate {mods.virtmanager.enable = true;};
+    monitoringOnly = evaluate {
+      mods.security.monitor = {
+        enable = true;
+        interval = "weekly";
+        updateInputs = ["unstable"];
+      };
+    };
   in [
     (check "${name}: legacy ClamAV defaults" (
       legacy.services.clamav.daemon.enable
@@ -97,6 +109,7 @@
       && !legacy.security.auditd.enable
       && !legacy.services.opensnitch.enable
       && !(legacy.systemd.timers ? clamdscan)
+      && !(legacy.systemd.services ? dashnix-security-monitor)
     ))
     (check "${name}: desktop outbound firewall and auditing" (
       desktop.networking.firewall.enable
@@ -176,6 +189,37 @@
       && customScan.services.clamav.scanner.scanDirectories == ["/etc" "/var/lib/nextcloud"]
       && !customScan.systemd.timers.clamdscan.timerConfig.Persistent
     ))
+    (check "${name}: security reports are unprivileged and persistent" (
+      desktop.systemd.services.dashnix-security-monitor.serviceConfig.User
+      == "DashNix"
+      && desktop.systemd.services.dashnix-security-monitor.serviceConfig.NoNewPrivileges
+      && desktop.systemd.services.dashnix-security-monitor.serviceConfig.ProtectHome == "read-only"
+      && desktop.systemd.timers.dashnix-security-monitor.timerConfig.Persistent
+      && desktop.mods.security.monitor.cvssThreshold == 7
+      && desktop.mods.security.monitor.updateInputs == []
+      && !server.mods.security.monitor.notifications.enable
+      && !(disabledFeatures.systemd.services ? dashnix-security-monitor)
+      && !(disabledFeatures.systemd.timers ? dashnix-security-monitor)
+    ))
+    (check "${name}: reports work without the security preset" (
+      !monitoringOnly.security.auditd.enable
+      && !monitoringOnly.services.opensnitch.enable
+      && monitoringOnly.systemd.timers.dashnix-security-monitor.timerConfig.OnCalendar == "weekly"
+    ))
+    (check "${name}: disabled virtualization adds no daemon, groups or packages" (
+      !legacy.virtualisation.libvirtd.enable
+      && !legacy.programs.virt-manager.enable
+      && !legacy.virtualisation.spiceUSBRedirection.enable
+      && !legacy.services.spice-vdagentd.enable
+      && !(legacy.systemd.sockets ? libvirtd)
+      && !(lib.elem "libvirtd" legacy.users.users.DashNix.extraGroups)
+      && !(lib.elem "kvm" legacy.users.users.DashNix.extraGroups)
+      && !(lib.elem "virt-viewer" (map lib.getName legacy.environment.systemPackages))
+      && !(lib.elem "kvm-amd" legacy.boot.kernelModules)
+      && virtualization.virtualisation.libvirtd.enable
+      && virtualization.programs.virt-manager.enable
+      && lib.elem "libvirtd" virtualization.users.users.DashNix.extraGroups
+    ))
   ];
   evaluateHome = settings:
     (inputs.home-manager.lib.homeManagerConfiguration {
@@ -206,9 +250,11 @@
     mods.security = {
       enable = true;
       opensnitch.ui.enable = false;
+      monitor.notifications.enable = false;
     };
     mods.clam.gui.enable = false;
   };
+  virtualizationHome = evaluateHome {mods.virtmanager.enable = true;};
   homeChecks = [
     (check "Home Manager: legacy GUI remains available" (lib.elem pkgs.clamtk legacyHome.home.packages))
     (check "Home Manager: desktop UI belongs to graphical session" (
@@ -224,6 +270,19 @@
     (check "Home Manager: GUI toggles override desktop defaults" (
       !noUiHome.services.opensnitch-ui.enable
       && !(lib.elem pkgs.clamtk noUiHome.home.packages)
+    ))
+    (check "Home Manager: report delivery is session-bound without a duplicate collector" (
+      desktopHome.systemd.user.timers.dashnix-security-notify.Install.WantedBy
+      == ["graphical-session.target"]
+      && desktopHome.systemd.user.services.dashnix-security-notify.Service.NoNewPrivileges
+      && !(desktopHome.systemd.user.services ? dashnix-security-monitor)
+      && !(serverHome.systemd.user.services ? dashnix-security-notify)
+      && !(noUiHome.systemd.user.timers ? dashnix-security-notify)
+      && !(legacyHome.systemd.user.services ? dashnix-security-notify)
+    ))
+    (check "Home Manager: virtualization opt-in controls autoconnect" (
+      !(legacyHome.dconf.settings ? "org/virt-manager/virt-manager/connections")
+      && toString virtualizationHome.dconf.settings."org/virt-manager/virt-manager/connections".autoconnect == "@as ['qemu:///system']"
     ))
   ];
   evaluateFramework = settings:
@@ -255,6 +314,9 @@
     ++ frameworkChecks;
 in
   assert lib.all (result: result) checks;
-    pkgs.runCommand "dashnix-security-presets" {} ''
+    pkgs.runCommand "dashnix-security-presets" {nativeBuildInputs = [pkgs.python3];} ''
+      cp -r ${../scripts} scripts
+      cp -r ${./.} tests
+      PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_security_monitor.py' -v
       touch "$out"
     ''

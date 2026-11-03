@@ -26,7 +26,7 @@ in {
     };
   };
 
-  config =
+  config = lib.mkIf config.mods.virtmanager.enable (
     lib.optionalAttrs (options ? virtualisation.libvirtd) {
       boot.kernelModules = [
         module
@@ -63,5 +63,6 @@ in {
           uris = ["qemu:///system"];
         };
       };
-    };
+    }
+  );
 }

@@ -3,6 +3,7 @@
 - Keep changes small and consistent with existing functional Nix modules and helpers.
 - Expose configuration through typed module options and use `mkDashDefault` for overridable framework defaults.
 - Gate extra systemd service/timer settings on the native feature enable flag so an overridden or disabled feature does not leave empty units behind.
+- Runtime helpers use explicit subprocess argument lists, validate external JSON and exit statuses, write state atomically, and test failure paths with offline fixtures. Never reuse mutating update scripts for unattended detection or place runtime state in a consumer checkout.
 - Use the flake's `format` (Alejandra) and `lint` (Statix) outputs for tooling.
 - Preserve upstream package dependency graphs when using upstream binary caches; changing nixpkgs or build inputs changes derivation hashes.
 - Select desktop runtime packages through the shared pinned package helper rather than overlaid host packages; advance release version and package-set revision together.

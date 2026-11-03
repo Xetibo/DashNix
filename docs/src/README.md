@@ -361,6 +361,8 @@ cache overrides require administrator configuration.
 | Existing SSH server | Native authentication settings | Key-only, no root login, X11 or agent forwarding |
 | Fail2ban | Disabled | Enabled; SSH jail follows OpenSSH enablement and ports |
 | Journal disk limit | 512 MiB | 1 GiB |
+| Package-advisory collection | Daily | Daily |
+| Desktop advisory/update notifications | Enabled | Disabled |
 
 Scan timers catch missed runs after startup and add up to 15 minutes of random
 delay. ClamAV's daemon and scheduled client run with lower scheduling weights.
@@ -398,8 +400,75 @@ require rule maintenance. Configure rules with `services.opensnitch.rules` in
 mods.security.opensnitch.enable = false;
 ```
 
-Standalone Home Manager can configure the UI and ClamTK only; a system
-administrator must enable the associated daemons and system policy.
+Standalone Home Manager does not enable system daemons or policy; a system
+administrator must configure them.
+
+### Advisory and update notifications
+
+Both security presets enable `mods.security.monitor.enable`. It can also be
+enabled without the other security policies. The daily persistent system timer
+runs as `conf.username`, even while logged out, and scans runtime closures of the
+current, booted and system-profile generations plus existing primary-user and
+Home Manager profiles. It does not scan every historical store generation or
+application-managed dependencies. Missing optional user profiles are skipped;
+paths in `extraProfiles` are required.
+
+```nix
+mods.security.monitor = {
+  # Already true when mods.security.enable is true.
+  enable = true;
+  # Explicit root input names; defaults to [] to preserve intentional pins.
+  updateInputs = ["nixpkgs" "dashNix"];
+  # Defaults to conf.nixosConfigPath; use your live consumer checkout.
+  flakePath = "/home/alice/gits/nixos";
+  cvssThreshold = 7;
+  # extraProfiles = ["/path/to/another/runtime-profile"];
+  # whitelist = "/home/alice/.config/vulnix/reviewed.toml";
+};
+```
+
+Vulnix matches package names/versions against NVD; these are **possible matches**,
+not confirmed vulnerabilities. Verify exposure, vendor backports and false
+positives. The optional runtime TOML whitelist should scope CVEs with reasons and
+expiry dates. CISA's Known Exploited Vulnerabilities catalog is joined separately;
+this works with vulnix versions that have no `--kev` flag. Initial NVD downloads
+can take time and substantial cache space; failed checks never count as clean.
+
+Home Manager delivers through the existing notification server, checking for new
+reports every 15 minutes and after login. CVSS scores at least `cvssThreshold` or
+known-exploited CVEs produce **critical** urgency; lower/unknown-severity findings
+need normal-priority review. Ordinary input updates are normal priority. Unchanged
+messages are deduplicated with daily reminders; failed delivery retries. Missing
+results, feed failures and scans/reports older than 48 hours warn normally; scan
+failure retains previous findings. Critical notifications request no timeout, but
+actual display behavior belongs to the desktop notification server.
+
+Input checks write a candidate lock outside the checkout and only compare the
+selected inputs, including follows references. They do not modify the real lock,
+stage/commit files, build packages, rebuild, or upgrade. A new revision is not a
+count of outdated installed packages; no new revision does not prove an old
+channel remains supported. Keep graphics/version pins intentional and migrate
+unsupported channels separately. Private inputs must be accessible to the user
+running the service; otherwise the report records a check failure.
+
+Reports are private to the primary user at
+`/var/lib/dashnix-security/report.json`; `vulnix.json` retains the last successful
+raw scan, with last-run bounded stderr logs and persistent NVD/CISA caches. On
+headless hosts use reports and journald; no graphical login or lingering is needed
+for collection. Standalone Home Manager installs delivery only and needs an
+administrator-provided report. Set `monitor.enable = false` to opt out, or
+`monitor.notifications.enable = false` to retain collection without desktop UI.
+
+After rebuilding, inspect or trigger collection (the start waits for completion):
+
+```sh
+systemctl list-timers dashnix-security-monitor.timer
+sudo systemctl start dashnix-security-monitor.service
+journalctl -u dashnix-security-monitor.service
+cat /var/lib/dashnix-security/report.json
+systemctl --user list-timers dashnix-security-notify.timer
+systemctl --user start dashnix-security-notify.service
+```
 
 ### Server access and confinement
 
@@ -458,7 +527,7 @@ systemctl list-timers clamdscan.timer
 journalctl -u clamdscan.service
 sudo ausearch -k system_configuration -ts today
 sudo lynis audit system --quick
-vulnix --system
+vulnix --system --closure --json
 ```
 
 Lynis reviews hardening; vulnix flags possible vulnerable package versions and

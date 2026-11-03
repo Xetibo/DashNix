@@ -24,6 +24,8 @@
     IOWeight = mkDashDefault 20;
   };
 in {
+  imports = [./security/monitor.nix];
+
   options.mods.security = {
     enable = lib.mkEnableOption "the DashNix security preset";
     preset = lib.mkOption {

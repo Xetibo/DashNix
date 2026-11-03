@@ -5,6 +5,7 @@
 - `lib/default.nix` exposes `dashNixLib.buildSystems` and `buildHome`, combining framework inputs with consumer host directories and package bundles.
 - Shared system defaults live in `base/`, Home Manager defaults in `home/`, and configurable features in `modules/`.
 - Opt-in role presets compose existing feature modules. System policy belongs to NixOS; graphical helpers belong to Home Manager. Preset defaults remain overridable through native options, including the base layer's Nix daemon trust policy.
+- Background security collection uses a persistent, unprivileged system timer and private reports. Graphical-session user timers deliver those reports separately, so headless collection does not require login or lingering. Advisory detection and selected dependency-revision checks never apply upgrades.
 - `example/` provides a consumer flake; `iso/` provides the installer image.
 - Hyprland's module/source input is pinned to a release. Runtime compositor, portal, and graphics packages come from a separate revision-pinned, unoverlaid nixpkgs input via `lib/hyprland-packages.nix`, preserving official binary-cache derivations independently of consumer overlays and updates.
 - The user session, Home Manager, installer, and OxiSession Hyprland kiosk share this package selection; Noctalia retains its upstream kiosk package. Mesa and userspace graphics drivers must use the compositor's package set because they are loaded into its process and depend on its libc ABI.

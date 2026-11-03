@@ -3,6 +3,15 @@
 Log of notable design decisions for LLM continuity. Keep entries concise; do
 not duplicate component-specific details that live in module code or docs.
 
+## 2026-11-03: Reusable advisory/update reports and virtualization opt-in
+
+- Gate the entire virtmanager module in both NixOS and Home Manager on `mods.virtmanager.enable`; its previous unconditional configuration installed libvirt/SPICE, groups and autoconnect even when disabled. Preserve explicitly enabled hosts.
+- Import `security/monitor.nix` from the security module, matching the documentation generator's `mods.security.monitor` namespace. Monitoring defaults on with either security preset and can be enabled separately. NixOS collects as `conf.username` with read-only home/system access and private persistent state; Home Manager only delivers notifications in the graphical session. Standalone Home Manager needs an administrator-provided report.
+- Scan runtime closures for current, booted and selected system profiles plus existing primary-user/Home Manager profiles. Skip nonexistent optional profiles, including the normal unused dangling `~/.nix-profile`; missing explicitly required paths fail visibly. Retain prior successful results on scan failures.
+- Parse the pinned vulnix 1.12.5 JSON and distinguish findings exit 2 from runtime-error exit 2. Join CISA KEV separately rather than using the unsupported `--kev` flag. Critical urgency means CVSS >= 7 (configurable) or known exploitation; unknown scores need review. Failures/stale reports warn normally; failed catalog refresh preserves previously known exploitation. Delivery is deduplicated with daily reminders and retry on failure.
+- Check only an explicit root-input allowlist, default empty. Use Nix's `--output-lock-file` in private temporary state, disable flake-config acceptance and import-from-derivation, resolve follows edges, and reject concurrent source-lock changes. Never invoke the existing committing update script, build/apply upgrades, or change a real checkout/index/lock.
+- Zorro's consumer enables the desktop preset and selects `nixpkgs`, `stable`, and `dashNix` for revision checks. Its source remains a GitHub input, so local framework edits require publication/input refresh or an explicit local override at deployment. Existing staged consumer lock work is preserved; Home Manager/AIDE repairs and rebuild remain user-owned.
+
 ## 2026-10-26: ROCm ICD compatibility without compiler libc metadata
 
 - The graphics guard rejected the already-pinned `rocmPackages.clr.icd` during an AMD/ROCm rebuild. Its custom ROCm sysroot compiler does not expose `stdenv.cc.libc`; missing metadata was not evidence of a package-set mismatch.
