@@ -475,24 +475,6 @@ in {
             '';
           };
         };
-        asm = {
-          enable = lib.mkOption {
-            default = true;
-            example = false;
-            type = lib.types.bool;
-            description = ''
-              Enables assembly.
-            '';
-          };
-          packages = lib.mkOption {
-            default = with pkgs; [asm-lsp];
-            example = [];
-            type = with lib.types; listOf package;
-            description = ''
-              assembly packages
-            '';
-          };
-        };
       };
     };
   };
@@ -558,7 +540,6 @@ in {
           ++ (lib.lists.optionals config.mods.coding.languages.dotnet.enable config.mods.coding.languages.dotnet.packages)
           ++ (lib.lists.optionals config.mods.coding.languages.bash.enable config.mods.coding.languages.bash.packages)
           ++ (lib.lists.optionals config.mods.coding.languages.C-CPP.enable config.mods.coding.languages.C-CPP.packages)
-          ++ (lib.lists.optionals config.mods.coding.languages.asm.enable config.mods.coding.languages.asm.packages)
           ++ (lib.lists.optionals config.mods.coding.languages.sql.enable config.mods.coding.languages.sql.packages)
           ++ (lib.lists.optionals config.mods.coding.languages.html-css.enable config.mods.coding.languages.html-css.packages)
           ++ (lib.lists.optionals config.mods.coding.languages.configFiles.enable config.mods.coding.languages.configFiles.packages)

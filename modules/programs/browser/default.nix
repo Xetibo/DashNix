@@ -1,6 +1,6 @@
 {
   imports = [
-    ./brave.nix
+    # ./brave.nix
     ./chromium.nix
     ./firefox.nix
     ./librewolf.nix
