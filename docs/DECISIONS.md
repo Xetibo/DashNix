@@ -3,6 +3,27 @@
 Log of notable design decisions for LLM continuity. Keep entries concise; do
 not duplicate component-specific details that live in module code or docs.
 
+## 2026-11-09: Codex native dependencies and real consumer builds
+
+- The user authorizes amending the current DashNix commit after fixes, refreshing only `dashNix` in `/home/dashie/gits/nixos`, and building the complete `zorro` toplevel without activation. Preserve the consumer's staged lock/host edits and unrelated NUR revision; snapshots are under `/tmp/opencode/zorro-build-jajbcpgl/`.
+- The first real consumer build consumes the committed Pyrefly fix but fails in Codex 0.167.0: `AWS_LC_SYS_USE_SYSTEM=1` cannot use ordinary OpenSSL. Its selected crates also need system Oniguruma, SQLite, zlib, and zstd under the same Cargo hook. Extend the shared overlay with those inputs and namespaced AWS-LC with generated Rust bindings; keep upstream OpenSSL, source, Cargo hash, features, companion binaries, and test settings unchanged.
+- Gate this dependency set on Codex 0.167+ so older channel recipes remain unchanged; extend regression assertions to multiple libraries and add the Codex version smoke check. Older stable channels contain different Codex/AWS-LC recipes. Jemalloc is only selected for musl in this source, not the failing GNU build.
+
+## 2026-11-09: Follow-up native dependencies for Pyrefly
+
+- After updating the consumer, DashVim's project-tool resolver pulls in `pyrefly` 1.3.2, exposing the same `zstd-sys`/`cargoUseSystemLibs` packaging gap. Its upstream recipe includes jemalloc but neither `pkg-config` nor `zstd`; the original three-package check did not cover this additional tool.
+- Extend the existing overlay and regression check with `pyrefly`, preserving its source, Cargo hash, jemalloc input, upstream tests, and version install check. Gate the override and assertions on package availability because the consumer's stable 25.05 channel has no `pyrefly`; do not introduce an unavailable package there.
+- Keep consumer locks, host configuration, and DashVim sources unchanged. Verify against the consumer's existing lock graph using the local-output harness documented below; a normal `git+file` input refresh still requires committing this follow-up first.
+- Verification passed against the consumer graph: Pyrefly built with 8,512 upstream tests passing (four upstream ignores), its version install check passed, and the expanded four-tool regression check passed. Both affected DashVim project-tool configurations and resolver variants built successfully. The complete `zorro` toplevel evaluated and its closure contains the fixed Pyrefly derivation, not the original failure. Both framework channels' regression assertions and scoped Alejandra/Statix passed. No full system build or activation was performed.
+
+## 2026-11-09: Native dependencies for Rust package builds
+
+- The consumer's nixpkgs `f4a03c008967841f2a0b3cb7c436fc6fc31671f6` adds `cargoUseSystemLibs`, forcing `zstd-sys` and `onig_sys` to use system libraries while several package recipes still omit their inputs. Failures in Home Manager, Neovim configuration and the system closure are downstream of those package builds, not independent errors.
+- Add `lib/rust-compat-overlay.nix` to both framework package imports and consumer bundle imports. Supply `pkg-config` plus `zstd` for `asm-lsp` and `flake-checker`, and `pkg-config` plus `oniguruma` for `neocmakelsp`. Keep packages, upstream Cargo hashes/tests and system-library policy; do not install build dependencies globally or disable the Cargo hook.
+- Normalize dependency outputs and deduplicate additions so repeated application is harmless. Add a CI flake check for both channels' inputs/idempotence and unstable package builds/CLI smoke tests. DashVim's Home Manager integration uses the host package set, so no editor source changes are required.
+- The consumer currently pins DashNix through `git+file`, which does not consume uncommitted fixes. A `path:` override also reads this framework's ignored local lock and can change nested pins. For exact verification, evaluate local framework outputs with `consumer.inputs.dashNix.inputs` plus a recursive `self`, then pass those outputs as `dashNix` to the local consumer's outputs function. Preserve the consumer's existing lock and host configuration edits; commit and refresh the Git input before normal deployment.
+- Verification against the consumer's locked inputs: all three builds and 244 upstream tests passed, as did the new CLI smoke check. The complete `zorro` toplevel evaluated, and its derivation closure contains all three replacements and none of the original failing derivations. Scoped Alejandra/Statix passed; repository-wide Statix still reports the previously documented desktop-module warnings. No full system build or activation was performed.
+
 ## 2026-11-04: Rust security reporter
 
 - Replace `scripts/security-monitor.py` with the `scripts/security-monitor` Rust crate, including collection, CISA KEV enrichment, selected-input checks, and notification delivery. Preserve `collect|notify --config`, generated JSON settings/report fields, service names, timers, sandboxing, and existing report/cache locations. Vulnix remains an external Python-based scanner, not part of this language migration.

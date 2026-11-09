@@ -8,6 +8,7 @@
   ...
 }: let
   goCompatOverlay = import ./go-compat-overlay.nix;
+  rustCompatOverlay = import ./rust-compat-overlay.nix;
   defaultConfig = {
     config = {
       allowUnfree = true;
@@ -17,6 +18,7 @@
       inputs.cachy.overlays.pinned
       inputs.nur.overlays.default
       goCompatOverlay
+      rustCompatOverlay
     ];
     inherit system;
   };

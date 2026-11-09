@@ -14,5 +14,6 @@ import pkgs {
     inputs.nur.overlays.default
     inputs.cachy.overlays.pinned
     (import ./go-compat-overlay.nix)
+    (import ./rust-compat-overlay.nix)
   ];
 }

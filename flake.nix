@@ -120,6 +120,11 @@
         pkgs = unstable;
         system = currentSystem;
       };
+      rust-compat = import ./tests/rust-compat.nix {
+        inherit inputs;
+        pkgs = unstable;
+        system = currentSystem;
+      };
     };
     dashNixInputs = inputs;
     stablePkgs = stable;
