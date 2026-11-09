@@ -7,10 +7,7 @@
   ...
 }: let
   cfg = config.mods.security.monitor;
-  script = pkgs.writeScript "dashnix-security-monitor" ''
-    #!${pkgs.python3}/bin/python3
-    ${builtins.readFile ../../../scripts/security-monitor.py}
-  '';
+  monitor = lib.getExe (pkgs.callPackage ../../../scripts/security-monitor {});
   stateDirectory = "/var/lib/dashnix-security";
   settings = pkgs.writeText "dashnix-security-monitor.json" (builtins.toJSON {
     state_directory = stateDirectory;
@@ -103,7 +100,7 @@ in {
           serviceConfig = {
             Type = "oneshot";
             User = config.conf.username;
-            ExecStart = "${script} collect --config ${settings}";
+            ExecStart = "${monitor} collect --config ${settings}";
             StateDirectory = "dashnix-security";
             StateDirectoryMode = "0700";
             UMask = "0077";
@@ -144,7 +141,7 @@ in {
           };
           Service = {
             Type = "oneshot";
-            ExecStart = "${script} notify --config ${notifySettings}";
+            ExecStart = "${monitor} notify --config ${notifySettings}";
             UMask = "0077";
             NoNewPrivileges = true;
           };

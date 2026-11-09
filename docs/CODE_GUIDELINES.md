@@ -5,6 +5,7 @@
 - Gate extra systemd service/timer settings on the native feature enable flag so an overridden or disabled feature does not leave empty units behind.
 - Runtime helpers use explicit subprocess argument lists, validate external JSON and exit statuses, write state atomically, and test failure paths with offline fixtures. Never reuse mutating update scripts for unattended detection or place runtime state in a consumer checkout.
 - Use the flake's `format` (Alejandra) and `lint` (Statix) outputs for tooling.
+- Rust runtime helpers keep tracked Cargo locks and use `rustPlatform.buildRustPackage` with offline tests. Use the matching flake development shell for Cargo, rustfmt, and Clippy; exclude local build artifacts from Nix sources.
 - Preserve upstream package dependency graphs when using upstream binary caches; changing nixpkgs or build inputs changes derivation hashes.
 - Select desktop runtime packages through the shared pinned package helper rather than overlaid host packages; advance release version and package-set revision together.
 - Bind greeter runtime environment in its launcher or command; greetd's PAM-created sessions do not inherit the systemd daemon environment.

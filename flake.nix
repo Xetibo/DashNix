@@ -100,6 +100,10 @@
     };
     lint = inputs.statix.packages.${currentSystem}.default;
     format = unstable.alejandra;
+    packages.${currentSystem}.security-monitor = unstable.callPackage ./scripts/security-monitor {};
+    devShells.${currentSystem}.security-monitor = unstable.mkShell {
+      packages = with unstable; [cargo rustc rustfmt clippy];
+    };
     checks.${currentSystem} = {
       security = import ./tests/security.nix {
         inherit inputs;

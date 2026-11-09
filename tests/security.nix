@@ -197,6 +197,7 @@
       && desktop.systemd.timers.dashnix-security-monitor.timerConfig.Persistent
       && desktop.mods.security.monitor.cvssThreshold == 7
       && desktop.mods.security.monitor.updateInputs == []
+      && lib.hasInfix "/bin/dashnix-security-monitor collect --config " desktop.systemd.services.dashnix-security-monitor.serviceConfig.ExecStart
       && !server.mods.security.monitor.notifications.enable
       && !(disabledFeatures.systemd.services ? dashnix-security-monitor)
       && !(disabledFeatures.systemd.timers ? dashnix-security-monitor)
@@ -275,6 +276,7 @@
       desktopHome.systemd.user.timers.dashnix-security-notify.Install.WantedBy
       == ["graphical-session.target"]
       && desktopHome.systemd.user.services.dashnix-security-notify.Service.NoNewPrivileges
+      && lib.any (command: lib.hasInfix "/bin/dashnix-security-monitor notify --config " command) desktopHome.systemd.user.services.dashnix-security-notify.Service.ExecStart
       && !(desktopHome.systemd.user.services ? dashnix-security-monitor)
       && !(serverHome.systemd.user.services ? dashnix-security-notify)
       && !(noUiHome.systemd.user.timers ? dashnix-security-notify)
@@ -314,9 +316,9 @@
     ++ frameworkChecks;
 in
   assert lib.all (result: result) checks;
-    pkgs.runCommand "dashnix-security-presets" {nativeBuildInputs = [pkgs.python3];} ''
-      cp -r ${../scripts} scripts
-      cp -r ${./.} tests
-      PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -p 'test_security_monitor.py' -v
+    pkgs.runCommand "dashnix-security-presets" {
+      nativeBuildInputs = [(pkgs.callPackage ../scripts/security-monitor {})];
+    } ''
+      dashnix-security-monitor --help
       touch "$out"
     ''

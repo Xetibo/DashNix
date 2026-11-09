@@ -413,6 +413,9 @@ Home Manager profiles. It does not scan every historical store generation or
 application-managed dependencies. Missing optional user profiles are skipped;
 paths in `extraProfiles` are required.
 
+Collection and delivery use a compiled Rust helper; vulnix remains the external
+advisory scanner. Existing report and cache files remain compatible.
+
 ```nix
 mods.security.monitor = {
   # Already true when mods.security.enable is true.

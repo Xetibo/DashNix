@@ -3,6 +3,13 @@
 Log of notable design decisions for LLM continuity. Keep entries concise; do
 not duplicate component-specific details that live in module code or docs.
 
+## 2026-11-04: Rust security reporter
+
+- Replace `scripts/security-monitor.py` with the `scripts/security-monitor` Rust crate, including collection, CISA KEV enrichment, selected-input checks, and notification delivery. Preserve `collect|notify --config`, generated JSON settings/report fields, service names, timers, sandboxing, and existing report/cache locations. Vulnix remains an external Python-based scanner, not part of this language migration.
+- Package with a tracked Cargo lock and `rustPlatform.buildRustPackage`; expose `packages.x86_64-linux.security-monitor` and `devShells.x86_64-linux.security-monitor`. Both module scopes use the compiled executable from their own `pkgs`. The existing security CI check builds/tests it rather than importing the removed Python helper.
+- Retain failed-scan findings, update results, and prior known exploitation on KEV failures. Keep private atomic JSON writes, collection/delivery locks, bounded stderr logs, subprocess deadlines, read-only temporary candidate locks, escaped notifications, daily deduplication, and failed-delivery retries. Use system TLS roots and environment proxies for CISA access. Port regression coverage to offline Rust unit and CLI tests.
+- Existing Python-generated reports, KEV caches, and sent-state JSON remain readable. Rust's canonical payload encoding changes notification fingerprints, so unchanged groups can be delivered once after migration before normal daily deduplication resumes.
+
 ## 2026-11-03: Reusable advisory/update reports and virtualization opt-in
 
 - Gate the entire virtmanager module in both NixOS and Home Manager on `mods.virtmanager.enable`; its previous unconditional configuration installed libvirt/SPICE, groups and autoconnect even when disabled. Preserve explicitly enabled hosts.
