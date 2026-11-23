@@ -142,10 +142,14 @@ in {
         enable = true;
         image = mkDashDefault (mkWallpaper baseScheme);
         polarity = mkDashDefault "dark";
-        targets = {
-          nixvim.enable = mkDashDefault false;
-          fish.enable = mkDashDefault false;
-        };
+        targets =
+          {
+            nixvim.enable = mkDashDefault false;
+            fish.enable = mkDashDefault false;
+          }
+          // lib.optionalAttrs (options ? stylix.targets.wayprompt.enable) {
+            wayprompt.enable = mkDashDefault false;
+          };
         inherit (config.mods.stylix) fonts;
         inherit (config.mods.stylix) cursor;
         base16Scheme = scheme;
